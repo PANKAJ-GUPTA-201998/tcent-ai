@@ -23,6 +23,9 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
+    // Set default name if not provided (use email username)
+    const userName = name || email.split('@')[0];
+
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -34,7 +37,7 @@ exports.register = async (req, res) => {
 
     // Create new user (password will be hashed automatically by pre-save middleware)
     const user = await User.create({
-      name,
+      name: userName,
       email,
       password
     });
