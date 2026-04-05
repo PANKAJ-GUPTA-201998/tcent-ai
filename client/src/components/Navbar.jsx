@@ -29,11 +29,23 @@ const Navbar = () => {
                 >
                   Dashboard
                 </Link>
-                <Link 
-                  to="/profile" 
+                <Link
+                  to="/profile"
                   className="text-gray-700 hover:text-primary transition"
                 >
                   Profile
+                </Link>
+                <Link
+                  to="/ai-advisor"
+                  className="text-gray-700 hover:text-primary transition"
+                >
+                  AI Career Advisor
+                </Link>
+                <Link
+                  to="/upload-resume"
+                  className="text-gray-700 hover:text-primary transition"
+                >
+                  Upload Resume
                 </Link>
                 <div className="flex items-center space-x-4">
                   <span className="text-gray-600 text-sm">

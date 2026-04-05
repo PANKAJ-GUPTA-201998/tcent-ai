@@ -10,7 +10,7 @@ const generateToken = (userId) => {
   return jwt.sign(
     { id: userId }, // Payload
     process.env.JWT_SECRET, // Secret key
-    { expiresIn: process.env.JWT_EXPIRE } // Options
+    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } // Options
   );
 };
 

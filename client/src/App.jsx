@@ -6,6 +6,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import AICareerAdvisor from './components/ai/AICareerAdvisor';
+import ResumeUpload from './components/upload/ResumeUpload';
 
 function App() {
   return (
@@ -32,6 +34,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ai-advisor"
+              element={
+                <ProtectedRoute>
+                  <AICareerAdvisor />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/upload-resume"
+              element={
+                <ProtectedRoute>
+                  <ResumeUpload />
                 </ProtectedRoute>
               }
             />
