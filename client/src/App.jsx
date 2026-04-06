@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import AICareerAdvisor from './components/ai/AICareerAdvisor';
 import ResumeUpload from './components/upload/ResumeUpload';
+import CareerDashboard from './pages/CareerDashboard';
 
 function App() {
   return (
@@ -50,6 +51,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ResumeUpload />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/career"
+              element={
+                <ProtectedRoute>
+                  <CareerDashboard />
                 </ProtectedRoute>
               }
             />

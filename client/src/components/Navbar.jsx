@@ -47,6 +47,12 @@ const Navbar = () => {
                 >
                   Upload Resume
                 </Link>
+                <Link
+                  to="/career"
+                  className="text-gray-700 hover:text-primary transition"
+                >
+                  Career Intelligence
+                </Link>
                 <div className="flex items-center space-x-4">
                   <span className="text-gray-600 text-sm">
                     {user?.email}
