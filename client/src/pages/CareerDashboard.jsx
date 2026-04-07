@@ -3,15 +3,36 @@
 // ============================================
 
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Cell,
+} from 'recharts';
+import { AlertCircle } from 'lucide-react';
 import { getMyResume, analyzeCareer } from '../services/careerService';
 import { Link } from 'react-router-dom';
+import Button from '../components/ui/Button';
+
+// Animation variants
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: (i = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.45, delay: i * 0.08, ease: 'easeOut' },
+  }),
+};
+
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.4, ease: 'easeOut' } },
+};
 
 // Circular progress using SVG
 const CircularProgress = ({ value, size = 120, strokeWidth = 10 }) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (value / 100) * circumference;
-
   const color = value >= 70 ? '#22c55e' : value >= 40 ? '#f59e0b' : '#ef4444';
 
   return (
@@ -36,7 +57,7 @@ const CircularProgress = ({ value, size = 120, strokeWidth = 10 }) => {
 const MatchBar = ({ percent }) => {
   const color = percent >= 70 ? 'bg-green-500' : percent >= 40 ? 'bg-yellow-500' : 'bg-red-400';
   return (
-    <div className="w-full bg-gray-100 rounded-full h-2 mt-1">
+    <div className="w-full bg-gray-100 rounded-full h-2 mt-1.5">
       <div
         className={`${color} h-2 rounded-full transition-all duration-700`}
         style={{ width: `${percent}%` }}
@@ -45,18 +66,34 @@ const MatchBar = ({ percent }) => {
   );
 };
 
+// Bar colors — blue gradient shades light → dark by rank
+const BAR_COLORS = ['#1d4ed8', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd'];
+
+const SalaryTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl shadow-lg px-4 py-3 text-sm">
+      <p className="font-semibold text-gray-800 mb-1">{label}</p>
+      <p className="text-gray-500">
+        Min: <span className="text-blue-600 font-medium">₹{payload[0]?.value}L</span>
+      </p>
+      <p className="text-gray-500">
+        Max: <span className="text-blue-600 font-medium">₹{payload[1]?.value}L</span>
+      </p>
+    </div>
+  );
+};
+
 const CareerDashboard = () => {
   const [status, setStatus] = useState('idle'); // idle | loading | done | error
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
-  const [resumeText, setResumeText] = useState('');
 
   const handleAnalyze = async () => {
     setStatus('loading');
     setError(null);
 
     try {
-      // Step 1: fetch resume from upload-service
       const filesData = await getMyResume();
 
       if (!filesData.resume?.extractedText) {
@@ -65,14 +102,9 @@ const CareerDashboard = () => {
         return;
       }
 
-      const text = filesData.resume.extractedText;
-      setResumeText(text);
-
-      // Step 2: analyze via ai-service
-      const result = await analyzeCareer(text);
+      const result = await analyzeCareer(filesData.resume.extractedText);
       setData(result);
       setStatus('done');
-
     } catch (err) {
       setError(err.message || 'Analysis failed. Please try again.');
       setStatus('error');
@@ -80,74 +112,99 @@ const CareerDashboard = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">🧠 Career Intelligence</h1>
+      <motion.div
+        className="mb-10"
+        variants={fadeUp}
+        initial="hidden"
+        animate="visible"
+      >
+        <h1 className="text-3xl font-bold text-gray-900 mb-1">Career Intelligence</h1>
         <p className="text-gray-500">AI-powered career matching based on your resume skills</p>
-      </div>
+      </motion.div>
 
       {/* Idle state */}
       {status === 'idle' && (
-        <div className="bg-white rounded-2xl shadow-lg p-10 text-center">
-          <div className="text-6xl mb-4">🚀</div>
+        <motion.div
+          className="bg-white border border-gray-200 rounded-2xl shadow-sm p-12 text-center"
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+        >
+          <div className="text-6xl mb-5">🚀</div>
           <h2 className="text-2xl font-semibold text-gray-800 mb-2">Analyze Your Career Fit</h2>
-          <p className="text-gray-500 mb-8 max-w-md mx-auto">
+          <p className="text-gray-500 mb-8 max-w-md mx-auto leading-relaxed">
             We'll extract your skills from your uploaded resume and match them against 10 career paths to show your best opportunities.
           </p>
-          <button
-            onClick={handleAnalyze}
-            className="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-semibold text-lg"
-          >
+          <Button variant="primary" size="lg" onClick={handleAnalyze}>
             Analyze My Resume
-          </button>
-          <p className="mt-4 text-sm text-gray-400">
+          </Button>
+          <p className="mt-5 text-sm text-gray-400">
             No resume yet?{' '}
-            <Link to="/upload-resume" className="text-blue-500 hover:underline">Upload one here</Link>
+            <Link to="/upload-resume" className="text-blue-500 hover:underline transition-colors">Upload one here</Link>
           </p>
-        </div>
+        </motion.div>
       )}
 
       {/* Loading */}
       {status === 'loading' && (
-        <div className="bg-white rounded-2xl shadow-lg p-10 text-center">
-          <div className="animate-spin text-5xl mb-4">⚙️</div>
+        <motion.div
+          className="bg-white border border-gray-200 rounded-2xl shadow-sm p-12 text-center"
+          variants={fadeIn}
+          initial="hidden"
+          animate="visible"
+        >
+          <div className="animate-spin text-5xl mb-5">⚙️</div>
           <h2 className="text-xl font-semibold text-gray-700 mb-2">Analyzing your resume...</h2>
           <p className="text-gray-400">Extracting skills and matching career paths</p>
-        </div>
+        </motion.div>
       )}
 
       {/* Error */}
       {status === 'error' && (
-        <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-          <div className="text-5xl mb-4">⚠️</div>
-          <p className="text-red-600 font-medium mb-6">{error}</p>
+        <motion.div
+          className="bg-white border border-gray-200 rounded-2xl shadow-sm p-10 text-center"
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+        >
+          <AlertCircle size={48} className="text-red-400 mx-auto mb-4" />
+          <div className="flex items-start gap-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-6 text-sm text-left max-w-sm mx-auto">
+            <AlertCircle size={16} className="shrink-0 mt-0.5" />
+            {error}
+          </div>
           <div className="flex gap-3 justify-center">
-            <button
-              onClick={() => setStatus('idle')}
-              className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-            >
-              Try Again
-            </button>
-            <Link
-              to="/upload-resume"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              Upload Resume
+            <Button variant="secondary" onClick={() => setStatus('idle')}>Try Again</Button>
+            <Link to="/upload-resume">
+              <Button variant="primary">Upload Resume</Button>
             </Link>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Results */}
       {status === 'done' && data && (
-        <div className="space-y-6">
+        <motion.div
+          className="space-y-6"
+          variants={fadeIn}
+          initial="hidden"
+          animate="visible"
+        >
 
-          {/* Top stats row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Bento top row — 3 cols */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+
             {/* Skill Health Score */}
-            <div className="bg-white rounded-2xl shadow p-6 flex flex-col items-center">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+            <motion.div
+              className="bg-white border border-gray-200 rounded-2xl shadow-sm p-7 flex flex-col items-center"
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              custom={0}
+            >
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
                 Skill Health Score
               </h3>
               <div className="relative">
@@ -156,57 +213,82 @@ const CareerDashboard = () => {
                   <span className="text-2xl font-bold text-gray-800">{data.healthScore}%</span>
                 </div>
               </div>
-              <p className="mt-3 text-sm text-gray-500">
+              <p className="mt-4 text-sm text-gray-500">
                 {data.healthScore >= 70 ? '🟢 Strong profile' : data.healthScore >= 40 ? '🟡 Developing' : '🔴 Needs work'}
               </p>
-            </div>
+            </motion.div>
 
             {/* Skills Extracted */}
-            <div className="bg-white rounded-2xl shadow p-6">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+            <motion.div
+              className="bg-white border border-gray-200 rounded-2xl shadow-sm p-7"
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              custom={1}
+            >
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
                 Skills Detected ({data.totalSkills})
               </h3>
-              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+              <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1">
                 {data.extractedSkills.map(skill => (
                   <span
                     key={skill}
-                    className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium"
+                    className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium"
                   >
                     {skill}
                   </span>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
-            {/* Top Match */}
-            <div className="bg-white rounded-2xl shadow p-6 flex flex-col justify-center">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+            {/* Best Career Match */}
+            <motion.div
+              className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl shadow-sm p-7 flex flex-col justify-center"
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              custom={2}
+            >
+              <h3 className="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-4">
                 Best Career Match
               </h3>
               {data.topCareers[0] && (
                 <>
                   <div className="text-4xl mb-2">{data.topCareers[0].emoji}</div>
-                  <div className="text-xl font-bold text-gray-800">{data.topCareers[0].title}</div>
-                  <div className="text-green-600 font-semibold text-lg">{data.topCareers[0].matchPercent}% match</div>
+                  <div className="text-xl font-bold text-gray-800 leading-snug">{data.topCareers[0].title}</div>
+                  <div className="text-green-600 font-semibold text-lg mt-1">{data.topCareers[0].matchPercent}% match</div>
                   <div className="text-gray-500 text-sm mt-1">
                     ₹{data.topCareers[0].salaryRange.min}–{data.topCareers[0].salaryRange.max} {data.topCareers[0].salaryRange.currency}
                   </div>
                 </>
               )}
-            </div>
+            </motion.div>
           </div>
 
-          {/* Top 5 Career Recommendations */}
-          <div className="bg-white rounded-2xl shadow p-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-5">🎯 Top Career Recommendations</h2>
-            <div className="space-y-5">
+          {/* Career Recommendations */}
+          <motion.div
+            className="bg-white border border-gray-200 rounded-2xl shadow-sm p-7"
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            custom={3}
+          >
+            <h2 className="text-base font-bold text-gray-800 mb-6">🎯 Top Career Recommendations</h2>
+            <div className="space-y-4">
               {data.topCareers.map((career, idx) => (
-                <div key={career.id} className="border border-gray-100 rounded-xl p-4 hover:border-blue-200 transition">
+                <motion.div
+                  key={career.id}
+                  className="border border-gray-100 rounded-xl p-5 hover:border-blue-200 hover:shadow-sm transition-all"
+                  variants={fadeUp}
+                  initial="hidden"
+                  animate="visible"
+                  custom={idx}
+                >
                   <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3 flex-1">
-                      <span className="text-3xl">{career.emoji}</span>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
+                    <div className="flex items-start gap-4 flex-1 min-w-0">
+                      <span className="text-3xl shrink-0">{career.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-semibold text-gray-800">{career.title}</span>
                           {idx === 0 && (
                             <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">
@@ -214,47 +296,117 @@ const CareerDashboard = () => {
                             </span>
                           )}
                         </div>
-                        <p className="text-gray-500 text-sm">{career.description}</p>
+                        <p className="text-gray-500 text-sm mt-0.5">{career.description}</p>
                         <MatchBar percent={career.matchPercent} />
                       </div>
                     </div>
                     <div className="text-right shrink-0">
                       <div className="text-xl font-bold text-blue-600">{career.matchPercent}%</div>
-                      <div className="text-xs text-gray-500">match</div>
+                      <div className="text-xs text-gray-400">match</div>
                     </div>
                   </div>
 
-                  <div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
+                  <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-500">
                     <span>💰 ₹{career.salaryRange.min}–{career.salaryRange.max} {career.salaryRange.currency}</span>
                     <span>📈 {career.growthRate} growth</span>
                     <span>🔥 {career.demandLevel} demand</span>
                   </div>
 
-                  {/* Matched skills */}
                   {career.matchedSkills.length > 0 && (
-                    <div className="mt-3">
-                      <span className="text-xs text-gray-400 mr-2">You have:</span>
-                      <div className="inline-flex flex-wrap gap-1">
-                        {career.matchedSkills.slice(0, 5).map(s => (
-                          <span key={s} className="px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded-full">✓ {s}</span>
-                        ))}
-                        {career.matchedSkills.length > 5 && (
-                          <span className="text-xs text-gray-400">+{career.matchedSkills.length - 5} more</span>
-                        )}
-                      </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                      <span className="text-xs text-gray-400 mr-1">You have:</span>
+                      {career.matchedSkills.slice(0, 5).map(s => (
+                        <span key={s} className="px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded-full">✓ {s}</span>
+                      ))}
+                      {career.matchedSkills.length > 5 && (
+                        <span className="text-xs text-gray-400">+{career.matchedSkills.length - 5} more</span>
+                      )}
                     </div>
                   )}
-                </div>
+                </motion.div>
               ))}
             </div>
-          </div>
+          </motion.div>
+
+          {/* Salary Range Chart */}
+          <motion.div
+            className="bg-white border border-gray-200 rounded-2xl shadow-sm p-7"
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            custom={4}
+          >
+            <h2 className="text-base font-bold text-gray-800 mb-1">💰 Salary Ranges by Career Path</h2>
+            <p className="text-gray-400 text-sm mb-6">Annual salary in lakhs (INR) — min and max for your top 5 matches</p>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart
+                data={data.topCareers.slice(0, 5).map((c) => ({
+                  name: c.title.length > 18 ? c.title.slice(0, 16) + '…' : c.title,
+                  fullName: c.title,
+                  min: c.salaryRange.min,
+                  max: c.salaryRange.max,
+                }))}
+                margin={{ top: 4, right: 8, left: 0, bottom: 4 }}
+                barCategoryGap="28%"
+                barGap={3}
+              >
+                <defs>
+                  {BAR_COLORS.map((color, i) => (
+                    <linearGradient key={i} id={`blueGrad${i}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={color} stopOpacity={0.95} />
+                      <stop offset="100%" stopColor={color} stopOpacity={0.55} />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 11, fill: '#94a3b8' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: '#94a3b8' }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => `₹${v}L`}
+                  width={52}
+                />
+                <Tooltip content={<SalaryTooltip />} cursor={{ fill: '#f8fafc' }} />
+                <Bar dataKey="min" name="Min Salary" radius={[4, 4, 0, 0]}>
+                  {data.topCareers.slice(0, 5).map((_, i) => (
+                    <Cell key={i} fill={`url(#blueGrad${i})`} />
+                  ))}
+                </Bar>
+                <Bar dataKey="max" name="Max Salary" radius={[4, 4, 0, 0]}>
+                  {data.topCareers.slice(0, 5).map((_, i) => (
+                    <Cell key={i} fill={`url(#blueGrad${i})`} fillOpacity={0.4} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="flex items-center gap-5 mt-3 justify-center text-xs text-gray-400">
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-sm bg-blue-600 inline-block" /> Min salary
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-sm bg-blue-300 inline-block" /> Max salary
+              </span>
+            </div>
+          </motion.div>
 
           {/* Skill Gaps */}
           {data.skillGaps.length > 0 && (
-            <div className="bg-white rounded-2xl shadow p-6">
-              <h2 className="text-lg font-bold text-gray-800 mb-2">📚 Skills to Learn</h2>
-              <p className="text-gray-500 text-sm mb-4">
-                Add these skills for your top career match: <strong>{data.topCareers[0]?.title}</strong>
+            <motion.div
+              className="bg-white border border-gray-200 rounded-2xl shadow-sm p-7"
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              custom={5}
+            >
+              <h2 className="text-base font-bold text-gray-800 mb-1">📚 Skills to Learn</h2>
+              <p className="text-gray-500 text-sm mb-5">
+                Add these to strengthen your fit for <strong>{data.topCareers[0]?.title}</strong>
               </p>
               <div className="flex flex-wrap gap-2">
                 {data.skillGaps.map(skill => (
@@ -266,20 +418,23 @@ const CareerDashboard = () => {
                   </span>
                 ))}
               </div>
-            </div>
+            </motion.div>
           )}
 
-          {/* Re-analyze button */}
-          <div className="text-center">
-            <button
-              onClick={() => setStatus('idle')}
-              className="px-6 py-2 text-sm text-gray-500 hover:text-gray-700 underline"
-            >
+          {/* Re-analyze */}
+          <motion.div
+            className="text-center pt-2"
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            custom={6}
+          >
+            <Button variant="outline" size="sm" onClick={() => setStatus('idle')}>
               Re-analyze
-            </button>
-          </div>
+            </Button>
+          </motion.div>
 
-        </div>
+        </motion.div>
       )}
     </div>
   );

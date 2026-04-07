@@ -1,8 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { Camera, X, Plus, Briefcase, Trash2, AlertCircle } from 'lucide-react';
 import api from '../utils/api';
+import Card from '../components/ui/Card';
+import Skeleton from '../components/ui/Skeleton';
+import Button from '../components/ui/Button';
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i = 0) => ({
+    opacity: 1, y: 0,
+    transition: { duration: 0.4, delay: i * 0.07, ease: 'easeOut' },
+  }),
+};
+
+const inputCls =
+  'w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition';
+
+const labelCls = 'block text-sm font-medium text-gray-700 mb-1.5';
+
+const INDUSTRIES = ['Tech', 'Finance', 'Healthcare', 'Education', 'E-commerce'];
+const WORK_MODES = ['remote', 'hybrid', 'office'];
 
 const Profile = () => {
-  // Form state
   const [skills, setSkills] = useState([]);
   const [skillInput, setSkillInput] = useState('');
   const [experience, setExperience] = useState([]);
@@ -10,345 +30,356 @@ const Profile = () => {
   const [industry, setIndustry] = useState([]);
   const [location, setLocation] = useState('');
   const [workMode, setWorkMode] = useState('');
+  const [avatar, setAvatar] = useState(null); // data URL preview
 
-  // UI state
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
-  // Fetch existing profile on component mount
-  useEffect(() => {
-    fetchProfile();
-  }, []);
+  const avatarInputRef = useRef(null);
+
+  useEffect(() => { fetchProfile(); }, []);
 
   const fetchProfile = async () => {
     try {
-      const response = await api.get('/api/profile');
-      const profile = response.data.profile;
-
-      // Populate form with existing data
-      setSkills(profile.skills || []);
-      setExperience(profile.experience || []);
-      setCareerGoals(profile.careerGoals || '');
-      setIndustry(profile.preferences?.industry || []);
-      setLocation(profile.preferences?.location || '');
-      setWorkMode(profile.preferences?.workMode || '');
-
-      setLoading(false);
-    } catch (error) {
-      if (error.response?.status === 404) {
-        // Profile doesn't exist yet, that's okay
-        setLoading(false);
-      } else {
+      const { data } = await api.get('/api/profile');
+      const p = data.profile;
+      setSkills(p.skills || []);
+      setExperience(p.experience || []);
+      setCareerGoals(p.careerGoals || '');
+      setIndustry(p.preferences?.industry || []);
+      setLocation(p.preferences?.location || '');
+      setWorkMode(p.preferences?.workMode || '');
+    } catch (err) {
+      if (err.response?.status !== 404) {
         setMessage({ type: 'error', text: 'Failed to load profile' });
-        setLoading(false);
       }
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Add skill to array
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setAvatar(ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
   const handleAddSkill = () => {
-    if (skillInput.trim() && !skills.includes(skillInput.trim())) {
-      setSkills([...skills, skillInput.trim()]);
+    const trimmed = skillInput.trim();
+    if (trimmed && !skills.includes(trimmed)) {
+      setSkills([...skills, trimmed]);
       setSkillInput('');
     }
   };
 
-  // Remove skill from array
-  const handleRemoveSkill = (skillToRemove) => {
-    setSkills(skills.filter(skill => skill !== skillToRemove));
-  };
+  const handleAddExperience = () =>
+    setExperience([...experience, { company: '', role: '', years: 0 }]);
 
-  // Add experience
-  const handleAddExperience = () => {
-    setExperience([
-      ...experience,
-      { company: '', role: '', years: 0 }
-    ]);
-  };
-
-  // Update experience
   const handleExperienceChange = (index, field, value) => {
-    const updatedExperience = [...experience];
-    updatedExperience[index][field] = value;
-    setExperience(updatedExperience);
+    const updated = [...experience];
+    updated[index][field] = value;
+    setExperience(updated);
   };
 
-  // Remove experience
-  const handleRemoveExperience = (index) => {
-    setExperience(experience.filter((_, i) => i !== index));
-  };
+  const toggleIndustry = (ind) =>
+    setIndustry(prev =>
+      prev.includes(ind) ? prev.filter(i => i !== ind) : [...prev, ind]
+    );
 
-  // Add industry
-  const handleAddIndustry = (industryName) => {
-    if (!industry.includes(industryName)) {
-      setIndustry([...industry, industryName]);
-    }
-  };
-
-  // Remove industry
-  const handleRemoveIndustry = (industryToRemove) => {
-    setIndustry(industry.filter(ind => ind !== industryToRemove));
-  };
-
-  // Save profile
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     setMessage({ type: '', text: '' });
-
     try {
-      const profileData = {
+      await api.post('/api/profile', {
         skills,
-        experience: experience.filter(exp => exp.company && exp.role), // Only valid entries
+        experience: experience.filter(exp => exp.company && exp.role),
         careerGoals,
-        preferences: {
-          industry,
-          location,
-          workMode,
-        },
-      };
-
-      await api.post('/api/profile', profileData);
-
-      setMessage({ type: 'success', text: 'Profile saved successfully! 🎉' });
-    } catch (error) {
-      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to save profile' });
+        preferences: { industry, location, workMode },
+      });
+      setMessage({ type: 'success', text: 'Profile saved successfully!' });
+    } catch (err) {
+      setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to save profile' });
+    } finally {
+      setSaving(false);
     }
-
-    setSaving(false);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-gray-600">Loading profile...</div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-6">
+        <Skeleton variant="card" height="h-28" />
+        <Skeleton variant="card" height="h-48" />
+        <Skeleton variant="card" height="h-48" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4">
-        {/* Header */}
-        <div className="bg-white rounded-xl shadow-md p-8 mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Your Profile
-          </h1>
-          <p className="text-gray-600">
-            Build your Career DNA to get personalized recommendations
-          </p>
-        </div>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
+      <form onSubmit={handleSubmit} className="space-y-6">
 
-        {/* Message */}
+        {/* Header card — avatar + title */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0}>
+          <Card>
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+
+              {/* Avatar */}
+              <div className="relative shrink-0">
+                <div className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-blue-100 to-slate-200 flex items-center justify-center border-2 border-white shadow-md">
+                  {avatar
+                    ? <img src={avatar} alt="Profile" className="w-full h-full object-cover" />
+                    : <span className="text-4xl text-slate-400 select-none">👤</span>
+                  }
+                </div>
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  className="absolute bottom-0 right-0 w-7 h-7 bg-blue-600 text-white rounded-full flex items-center justify-center shadow hover:bg-blue-700 transition"
+                  aria-label="Upload photo"
+                >
+                  <Camera size={13} />
+                </button>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
+              </div>
+
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Your Profile</h1>
+                <p className="text-gray-500 text-sm mt-1">
+                  Build your Career DNA to get personalised recommendations.
+                </p>
+                {avatar && (
+                  <button
+                    type="button"
+                    onClick={() => setAvatar(null)}
+                    className="mt-2 text-xs text-red-400 hover:text-red-600 flex items-center gap-1"
+                  >
+                    <X size={12} /> Remove photo
+                  </button>
+                )}
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Status message */}
         {message.text && (
-          <div className={`mb-6 p-4 rounded-lg ${
-            message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-          }`}>
+          <motion.div
+            variants={fadeUp} initial="hidden" animate="visible"
+            className={`flex items-start gap-2.5 px-4 py-3 rounded-lg text-sm font-medium ${
+              message.type === 'success'
+                ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
+                : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800'
+            }`}
+          >
+            <AlertCircle size={16} className="shrink-0 mt-0.5" />
             {message.text}
-          </div>
+          </motion.div>
         )}
 
-        {/* Profile Form */}
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Skills Section */}
-          <div className="bg-white rounded-xl shadow-md p-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Skills</h2>
-            
+        {/* Skills */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={1}>
+          <Card title="Skills">
             <div className="flex gap-2 mb-4">
               <input
                 type="text"
                 value={skillInput}
                 onChange={(e) => setSkillInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
-                placeholder="Add a skill (e.g., JavaScript, React)"
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
+                placeholder="e.g. JavaScript, React, Python"
+                className={inputCls}
               />
-              <button
-                type="button"
-                onClick={handleAddSkill}
-                className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition"
-              >
+              <Button type="button" variant="primary" onClick={handleAddSkill} icon={<Plus size={15} />} className="shrink-0">
                 Add
-              </button>
+              </Button>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              {skills.map((skill, index) => (
-                <span
-                  key={index}
-                  className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full flex items-center gap-2"
-                >
-                  {skill}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveSkill(skill)}
-                    className="text-blue-900 hover:text-red-600"
+            {skills.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {skills.map(skill => (
+                  <span
+                    key={skill}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-xs font-medium"
                   >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
+                    {skill}
+                    <button
+                      type="button"
+                      onClick={() => setSkills(skills.filter(s => s !== skill))}
+                      className="text-blue-400 hover:text-red-500 transition"
+                      aria-label={`Remove ${skill}`}
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400">No skills added yet.</p>
+            )}
+          </Card>
+        </motion.div>
 
-          {/* Experience Section */}
-          <div className="bg-white rounded-xl shadow-md p-8">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">Experience</h2>
-              <button
-                type="button"
-                onClick={handleAddExperience}
-                className="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-green-600 transition"
-              >
-                + Add Experience
-              </button>
+        {/* Experience */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={2}>
+          <Card>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-base font-semibold text-gray-800">Experience</h2>
+              <Button type="button" variant="secondary" size="sm" onClick={handleAddExperience} icon={<Briefcase size={13} />}>
+                Add Role
+              </Button>
             </div>
 
-            <div className="space-y-4">
-              {experience.map((exp, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4">
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <input
-                      type="text"
-                      placeholder="Company"
-                      value={exp.company}
-                      onChange={(e) => handleExperienceChange(index, 'company', e.target.value)}
-                      className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Role"
-                      value={exp.role}
-                      onChange={(e) => handleExperienceChange(index, 'role', e.target.value)}
-                      className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    <div className="flex gap-2">
-                      <input
-                        type="number"
-                        placeholder="Years"
-                        value={exp.years}
-                        onChange={(e) => handleExperienceChange(index, 'years', parseInt(e.target.value) || 0)}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveExperience(index)}
-                        className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
-                      >
-                        Remove
-                      </button>
+            {experience.length === 0 ? (
+              <p className="text-sm text-gray-400">No experience added yet.</p>
+            ) : (
+              <div className="space-y-4">
+                {experience.map((exp, index) => (
+                  <div key={index} className="border border-gray-100 rounded-xl p-4 bg-gray-50/60">
+                    <div className="grid sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className={labelCls}>Company</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Google"
+                          value={exp.company}
+                          onChange={(e) => handleExperienceChange(index, 'company', e.target.value)}
+                          className={inputCls}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Role</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Software Engineer"
+                          value={exp.role}
+                          onChange={(e) => handleExperienceChange(index, 'role', e.target.value)}
+                          className={inputCls}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Years</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            placeholder="0"
+                            min="0"
+                            max="50"
+                            value={exp.years}
+                            onChange={(e) => handleExperienceChange(index, 'years', parseInt(e.target.value) || 0)}
+                            className={inputCls}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setExperience(experience.filter((_, i) => i !== index))}
+                            className="px-3 py-2.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                            aria-label="Remove"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        </motion.div>
 
-          {/* Career Goals Section */}
-          <div className="bg-white rounded-xl shadow-md p-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Career Goals</h2>
+        {/* Career Goals */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={3}>
+          <Card title="Career Goals">
+            <label className={labelCls}>
+              What are your career aspirations?
+            </label>
             <textarea
               value={careerGoals}
               onChange={(e) => setCareerGoals(e.target.value)}
-              placeholder="What are your career aspirations? (e.g., Become a Product Manager, Transition to AI/ML)"
-              rows="4"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="e.g. Become a Product Manager, transition into AI/ML, lead an engineering team..."
+              rows={4}
+              className={`${inputCls} resize-none`}
             />
-          </div>
+          </Card>
+        </motion.div>
 
-          {/* Preferences Section */}
-          <div className="bg-white rounded-xl shadow-md p-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Work Preferences</h2>
+        {/* Work Preferences */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={4}>
+          <Card title="Work Preferences">
 
-            {/* Industry */}
+            {/* Industries */}
             <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2">
-                Preferred Industries
-              </label>
-              <div className="flex gap-2 mb-2">
-                {['Tech', 'Finance', 'Healthcare', 'Education', 'E-commerce'].map(ind => (
+              <label className={labelCls}>Preferred Industries</label>
+              <div className="flex flex-wrap gap-2">
+                {INDUSTRIES.map(ind => (
                   <button
                     key={ind}
                     type="button"
-                    onClick={() => handleAddIndustry(ind)}
-                    className={`px-4 py-2 rounded-lg transition ${
+                    onClick={() => toggleIndustry(ind)}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium border transition ${
                       industry.includes(ind)
-                        ? 'bg-primary text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'
                     }`}
                   >
                     {ind}
                   </button>
-                ))}
-              </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {industry.map((ind, index) => (
-                  <span
-                    key={index}
-                    className="bg-green-100 text-green-700 px-4 py-2 rounded-full flex items-center gap-2"
-                  >
-                    {ind}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveIndustry(ind)}
-                      className="text-green-900 hover:text-red-600"
-                    >
-                      ×
-                    </button>
-                  </span>
                 ))}
               </div>
             </div>
 
             {/* Location */}
             <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2">
-                Preferred Location
-              </label>
+              <label className={labelCls} htmlFor="location">Preferred Location</label>
               <input
+                id="location"
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g., Bengaluru, Remote, Mumbai"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="e.g. Bengaluru, Remote, Mumbai"
+                className={inputCls}
               />
             </div>
 
             {/* Work Mode */}
             <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Work Mode
-              </label>
-              <div className="flex gap-4">
-                {['remote', 'hybrid', 'office'].map(mode => (
+              <label className={labelCls}>Work Mode</label>
+              <div className="flex gap-2 flex-wrap">
+                {WORK_MODES.map(mode => (
                   <button
                     key={mode}
                     type="button"
                     onClick={() => setWorkMode(mode)}
-                    className={`px-6 py-3 rounded-lg font-medium transition ${
+                    className={`px-5 py-2 rounded-lg text-sm font-medium border transition capitalize ${
                       workMode === mode
-                        ? 'bg-secondary text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        ? 'bg-slate-800 text-white border-slate-800'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-slate-400'
                     }`}
                   >
-                    {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                    {mode}
                   </button>
                 ))}
               </div>
             </div>
-          </div>
+          </Card>
+        </motion.div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full bg-primary text-white py-4 rounded-lg font-medium text-lg hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {saving ? 'Saving...' : 'Save Profile'}
-          </button>
-        </form>
-      </div>
+        {/* Submit */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={5}>
+          <Button type="submit" variant="primary" size="lg" loading={saving} className="w-full">
+            {saving ? 'Saving…' : 'Save Profile'}
+          </Button>
+        </motion.div>
+
+      </form>
     </div>
   );
 };

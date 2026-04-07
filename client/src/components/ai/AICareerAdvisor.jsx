@@ -1,11 +1,12 @@
 // ============================================
 // AI Career Advisor Component
 // ============================================
-// Main AI chat page with full functionality
 
 import React, { useState, useEffect } from 'react';
+import { Send, Trash2, AlertCircle } from 'lucide-react';
 import ChatBox from './ChatBox';
 import QuickQuestions from './QuickQuestions';
+import Button from '../ui/Button';
 import { getCareerAdvice } from '../../services/aiService';
 
 const AICareerAdvisor = () => {
@@ -15,186 +16,166 @@ const AICareerAdvisor = () => {
   const [error, setError] = useState(null);
   const [remainingQuestions, setRemainingQuestions] = useState(10);
 
-  // Load messages from localStorage on mount
   useEffect(() => {
-    const savedMessages = localStorage.getItem('chatMessages');
-    if (savedMessages) {
-      setMessages(JSON.parse(savedMessages));
-    }
+    const saved = localStorage.getItem('chatMessages');
+    if (saved) setMessages(JSON.parse(saved));
   }, []);
 
-  // Save messages to localStorage whenever they change
   useEffect(() => {
     if (messages.length > 0) {
       localStorage.setItem('chatMessages', JSON.stringify(messages));
     }
   }, [messages]);
 
-  // Handle sending message
   const handleSendMessage = async (question = inputText) => {
     if (!question.trim() || isLoading) return;
 
-    // Clear error
     setError(null);
-
-    // Add user message
-    const userMessage = {
-      text: question,
-      isUser: true,
-      timestamp: new Date().toISOString()
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages(prev => [...prev, { text: question, isUser: true, timestamp: new Date().toISOString() }]);
     setInputText('');
     setIsLoading(true);
 
     try {
-      // Call AI service
       const response = await getCareerAdvice(question);
-
-      // Add AI response
-      const aiMessage = {
+      setMessages(prev => [...prev, {
         text: response.answer,
         isUser: false,
         timestamp: new Date().toISOString(),
-        cached: response.cached
-      };
-
-      setMessages((prev) => [...prev, aiMessage]);
-
-      // Update remaining questions (if provided by API)
+        cached: response.cached,
+      }]);
       if (response.remainingQuestions !== undefined) {
         setRemainingQuestions(response.remainingQuestions);
       }
-
     } catch (err) {
-      console.error('AI Error:', err);
-      
-      // Handle rate limit error
       if (err.message?.includes('Daily limit')) {
-        setError('Daily limit reached! You can ask 10 questions per day. Try again tomorrow.');
+        setError('Daily limit reached. You can ask 10 questions per day. Try again tomorrow.');
         setRemainingQuestions(0);
       } else if (err.message?.includes('token') || err.message?.includes('login')) {
-        setError('Please login to use AI Career Advisor');
+        setError('Please log in to use the AI Career Advisor.');
       } else {
-        setError(err.message || 'Failed to get AI response. Please try again.');
+        setError(err.message || 'Failed to get a response. Please try again.');
       }
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle Enter key press
-  const handleKeyPress = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
 
-  // Clear chat history
   const clearChat = () => {
     setMessages([]);
+    setError(null);
     localStorage.removeItem('chatMessages');
   };
 
+  const canSend = !!inputText.trim() && !isLoading && remainingQuestions > 0;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8">
-      <div className="max-w-5xl mx-auto px-4">
-        {/* Header */}
-        <div className="bg-white rounded-t-2xl shadow-lg p-6 border-b">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                🤖 AI Career Advisor
-              </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Get personalized career guidance powered by AI
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-sm text-gray-600">
-                Questions remaining today
-              </div>
-              <div className="text-2xl font-bold text-blue-600">
-                {remainingQuestions}/10
-              </div>
-            </div>
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+
+      {/* Header */}
+      <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-t-2xl p-6 border-b-0">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">AI Career Advisor</h1>
+            <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">
+              Personalised career guidance powered by AI
+            </p>
           </div>
-        </div>
-
-        {/* Main chat area */}
-        <div className="bg-white shadow-lg" style={{ height: '500px', display: 'flex', flexDirection: 'column' }}>
-          {/* Empty state or messages */}
-          {messages.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-              <div className="text-6xl mb-4">💬</div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                Welcome to AI Career Advisor!
-              </h2>
-              <p className="text-gray-600 mb-6 max-w-md">
-                Ask me anything about your career - transitions, skills, salary negotiation, or job search tips.
-              </p>
-              <QuickQuestions
-                onQuestionClick={handleSendMessage}
-                disabled={isLoading || remainingQuestions === 0}
-              />
-            </div>
-          ) : (
-            <>
-              {/* Chat messages */}
-              <ChatBox messages={messages} isLoading={isLoading} />
-
-              {/* Clear chat button */}
-              <div className="px-4 pb-2">
-                <button
-                  onClick={clearChat}
-                  className="text-xs text-gray-500 hover:text-red-600 transition-colors"
-                >
-                  🗑️ Clear chat history
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Input area */}
-        <div className="bg-white rounded-b-2xl shadow-lg p-4 border-t">
-          {/* Error message */}
-          {error && (
-            <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-              <span className="text-red-600">⚠️</span>
-              <p className="text-sm text-red-700 flex-1">{error}</p>
-            </div>
-          )}
-
-          {/* Input box */}
-          <div className="flex gap-2">
-            <textarea
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ask me about your career..."
-              maxLength={500}
-              rows={2}
-              disabled={isLoading || remainingQuestions === 0}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
-            />
-            <button
-              onClick={() => handleSendMessage()}
-              disabled={!inputText.trim() || isLoading || remainingQuestions === 0}
-              className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
-            >
-              {isLoading ? '⏳' : '📤'} Send
-            </button>
-          </div>
-
-          {/* Character count */}
-          <div className="mt-2 text-xs text-gray-500 text-right">
-            {inputText.length}/500 characters
+          <div className="text-right shrink-0">
+            <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Today's questions</p>
+            <p className={`text-2xl font-bold ${remainingQuestions === 0 ? 'text-red-500' : 'text-blue-600 dark:text-blue-400'}`}>
+              {remainingQuestions}<span className="text-sm font-normal text-gray-400">/10</span>
+            </p>
           </div>
         </div>
       </div>
+
+      {/* Chat area */}
+      <div
+        className="bg-white dark:bg-slate-900 border-x border-gray-200 dark:border-slate-700"
+        style={{ height: 480, display: 'flex', flexDirection: 'column' }}
+      >
+        {messages.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+            <div className="text-6xl mb-4">💬</div>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
+              Welcome to AI Career Advisor
+            </h2>
+            <p className="text-gray-500 dark:text-slate-400 text-sm mb-6 max-w-md">
+              Ask anything about career transitions, skills, salary negotiation, or job search tips.
+            </p>
+            <QuickQuestions
+              onQuestionClick={handleSendMessage}
+              disabled={isLoading || remainingQuestions === 0}
+            />
+          </div>
+        ) : (
+          <>
+            <ChatBox messages={messages} isLoading={isLoading} />
+            <div className="px-4 pb-2 border-t border-gray-50 dark:border-slate-800 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearChat}
+                icon={<Trash2 size={13} />}
+              >
+                Clear history
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Input area */}
+      <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-b-2xl p-4">
+        {error && (
+          <div className="flex items-start gap-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-3 text-sm">
+            <AlertCircle size={16} className="shrink-0 mt-0.5" />
+            {error}
+          </div>
+        )}
+
+        {remainingQuestions === 0 && !error && (
+          <div className="flex items-start gap-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 px-4 py-3 rounded-lg mb-3 text-sm">
+            <AlertCircle size={16} className="shrink-0 mt-0.5" />
+            Daily limit reached. Your quota resets at midnight.
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <textarea
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={remainingQuestions === 0 ? 'Daily limit reached…' : 'Ask me about your career…'}
+            maxLength={500}
+            rows={2}
+            disabled={isLoading || remainingQuestions === 0}
+            className="flex-1 px-4 py-3 text-sm border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed transition"
+          />
+          <Button
+            variant="primary"
+            onClick={() => handleSendMessage()}
+            disabled={!canSend}
+            loading={isLoading}
+            icon={!isLoading ? <Send size={16} /> : undefined}
+            className="self-end"
+          >
+            Send
+          </Button>
+        </div>
+
+        <div className="mt-2 text-xs text-gray-400 dark:text-slate-500 text-right">
+          {inputText.length}/500
+        </div>
+      </div>
+
     </div>
   );
 };

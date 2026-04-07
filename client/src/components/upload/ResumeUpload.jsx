@@ -1,11 +1,13 @@
 // ============================================
 // ResumeUpload Component
 // ============================================
-// Complete resume upload with drag-drop and progress
 
 import React, { useState } from 'react';
+import { ExternalLink, Trash2, AlertCircle } from 'lucide-react';
 import FileDropzone from './FileDropzone';
 import UploadProgress from './UploadProgress';
+import Button from '../ui/Button';
+import Card from '../ui/Card';
 import { uploadResume } from '../../services/uploadService';
 
 const ResumeUpload = () => {
@@ -17,7 +19,6 @@ const ResumeUpload = () => {
   const [sections, setSections] = useState(null);
   const [error, setError] = useState(null);
 
-  // Handle file selection
   const handleFileSelect = (file) => {
     setSelectedFile(file);
     setError(null);
@@ -27,7 +28,6 @@ const ResumeUpload = () => {
     setUploadProgress(0);
   };
 
-  // Handle upload
   const handleUpload = async () => {
     if (!selectedFile) return;
 
@@ -35,33 +35,20 @@ const ResumeUpload = () => {
     setError(null);
 
     try {
-      const result = await uploadResume(selectedFile, (progress) => {
-        setUploadProgress(progress);
-      });
-
-      // Upload successful - log full response to debug
-      console.log('Upload response:', result);
-      console.log('extractedText:', result.extractedText);
-      console.log('sections:', result.sections);
-
+      const result = await uploadResume(selectedFile, setUploadProgress);
       setUploadedFile(result.file);
       setExtractedText(result.extractedText || result.file?.extractedText || null);
       setSections(result.sections || result.file?.sections || null);
       setSelectedFile(null);
-
-      // Save resume URL to user profile (if needed)
       localStorage.setItem('resumeUrl', result.file.url);
-
     } catch (err) {
-      console.error('Upload Error:', err);
-      setError(err.message || 'Failed to upload resume');
+      setError(err.message || 'Failed to upload resume. Please try again.');
       setUploadProgress(0);
     } finally {
       setIsUploading(false);
     }
   };
 
-  // Handle delete uploaded resume
   const handleDelete = () => {
     setUploadedFile(null);
     setExtractedText(null);
@@ -71,70 +58,72 @@ const ResumeUpload = () => {
     localStorage.removeItem('resumeUrl');
   };
 
+  const SECTION_BADGES = [
+    { key: 'hasEmail',      label: 'Email',      color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+    { key: 'hasPhone',      label: 'Phone',      color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
+    { key: 'hasExperience', label: 'Experience', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },
+    { key: 'hasEducation',  label: 'Education',  color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+    { key: 'hasSkills',     label: 'Skills',     color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400' },
+  ];
+
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+
       {/* Header */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">
-          📄 Upload Your Resume
-        </h2>
-        <p className="text-gray-600">
-          Upload your resume (PDF only, max 5MB) for AI-powered review and analysis
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-1">Upload Your Resume</h2>
+        <p className="text-gray-500 dark:text-slate-400 text-sm">
+          PDF only, max 5 MB — AI will extract and analyse your skills automatically.
         </p>
       </div>
 
-      {/* Upload area */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        {/* Show dropzone if no file uploaded */}
+      {/* Upload card */}
+      <Card>
         {!uploadedFile && (
           <>
             <FileDropzone
               onFileSelect={handleFileSelect}
               acceptedTypes={['application/pdf']}
-              maxSize={5 * 1024 * 1024} // 5MB
+              maxSize={5 * 1024 * 1024}
               disabled={isUploading}
               icon="📄"
               title="Drop your resume here"
               description="or click to browse (PDF only)"
             />
 
-            {/* Selected file info */}
             {selectedFile && (
-              <div className="mt-6">
-                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="mt-5">
+                <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">📄</span>
                     <div>
-                      <div className="font-medium text-gray-800">
-                        {selectedFile.name}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {(selectedFile.size / 1024).toFixed(1)} KB
-                      </div>
+                      <p className="font-medium text-gray-800 dark:text-gray-100 text-sm">{selectedFile.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">{(selectedFile.size / 1024).toFixed(1)} KB</p>
                     </div>
                   </div>
                   <button
                     onClick={() => setSelectedFile(null)}
-                    className="text-red-600 hover:text-red-700 transition-colors"
+                    className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1"
+                    aria-label="Remove file"
                   >
                     ✕
                   </button>
                 </div>
 
-                {/* Upload button */}
-                <button
+                <Button
+                  variant="primary"
+                  size="lg"
+                  loading={isUploading}
                   onClick={handleUpload}
-                  disabled={isUploading}
-                  className="w-full mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+                  className="w-full mt-4"
                 >
-                  {isUploading ? '⏳ Uploading...' : '📤 Upload Resume'}
-                </button>
+                  {isUploading ? 'Uploading…' : 'Upload Resume'}
+                </Button>
               </div>
             )}
 
-            {/* Upload progress */}
             {isUploading && (
-              <div className="mt-6">
+              <div className="mt-5">
                 <UploadProgress
                   progress={uploadProgress}
                   fileName={selectedFile?.name || 'resume.pdf'}
@@ -144,83 +133,42 @@ const ResumeUpload = () => {
           </>
         )}
 
-        {/* Uploaded file display */}
+        {/* Success state */}
         {uploadedFile && (
           <div className="text-center">
-            {/* Success icon */}
             <div className="text-6xl mb-4">✅</div>
-            
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              Resume Uploaded Successfully!
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1">
+              Resume Uploaded Successfully
             </h3>
-            
-            <p className="text-gray-600 mb-6">
-              Your resume has been uploaded and processed
+            <p className="text-gray-500 dark:text-slate-400 text-sm mb-6">
+              Your resume has been processed and is ready for analysis.
             </p>
 
             {/* File details */}
-            <div className="bg-gray-50 rounded-lg p-4 mb-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <div className="text-gray-600">File Name</div>
-                  <div className="font-medium text-gray-800">
-                    {uploadedFile.name}
+            <div className="bg-gray-50 dark:bg-slate-800 rounded-lg p-4 mb-4 text-left">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                {[
+                  { label: 'File Name', value: uploadedFile.name },
+                  { label: 'Pages',     value: uploadedFile.pages || 'N/A' },
+                  { label: 'Size',      value: `${(uploadedFile.size / 1024).toFixed(1)} KB` },
+                  { label: 'Uploaded',  value: new Date(uploadedFile.uploadedAt).toLocaleDateString() },
+                ].map(({ label, value }) => (
+                  <div key={label}>
+                    <p className="text-gray-500 dark:text-slate-400 text-xs">{label}</p>
+                    <p className="font-medium text-gray-800 dark:text-gray-100 truncate">{value}</p>
                   </div>
-                </div>
-                <div>
-                  <div className="text-gray-600">Pages</div>
-                  <div className="font-medium text-gray-800">
-                    {uploadedFile.pages || 'N/A'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-gray-600">Size</div>
-                  <div className="font-medium text-gray-800">
-                    {(uploadedFile.size / 1024).toFixed(1)} KB
-                  </div>
-                </div>
-                <div>
-                  <div className="text-gray-600">Uploaded</div>
-                  <div className="font-medium text-gray-800">
-                    {new Date(uploadedFile.uploadedAt).toLocaleDateString()}
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
-            {/* Resume sections detected */}
+            {/* Detected sections */}
             {sections && (
-              <div className="bg-green-50 rounded-lg p-4 mb-4">
-                <div className="text-sm font-medium text-green-800 mb-2">
-                  ✓ Sections Detected:
-                </div>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {sections.hasEmail && (
-                    <span className="px-3 py-1 bg-green-200 text-green-800 rounded-full text-xs">
-                      Email
-                    </span>
-                  )}
-                  {sections.hasPhone && (
-                    <span className="px-3 py-1 bg-green-200 text-green-800 rounded-full text-xs">
-                      Phone
-                    </span>
-                  )}
-                  {sections.hasExperience && (
-                    <span className="px-3 py-1 bg-green-200 text-green-800 rounded-full text-xs">
-                      Experience
-                    </span>
-                  )}
-                  {sections.hasEducation && (
-                    <span className="px-3 py-1 bg-green-200 text-green-800 rounded-full text-xs">
-                      Education
-                    </span>
-                  )}
-                  {sections.hasSkills && (
-                    <span className="px-3 py-1 bg-green-200 text-green-800 rounded-full text-xs">
-                      Skills
-                    </span>
-                  )}
-                </div>
+              <div className="flex flex-wrap gap-2 justify-center mb-5">
+                {SECTION_BADGES.filter(b => sections[b.key]).map(b => (
+                  <span key={b.key} className={`px-3 py-1 rounded-full text-xs font-medium ${b.color}`}>
+                    {b.label}
+                  </span>
+                ))}
               </div>
             )}
 
@@ -230,94 +178,63 @@ const ResumeUpload = () => {
                 href={uploadedFile.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="flex-1"
               >
-                👁️ View Resume
+                <Button variant="primary" icon={<ExternalLink size={15} />} className="w-full">
+                  View Resume
+                </Button>
               </a>
-              <button
-                onClick={handleDelete}
-                className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-              >
-                🗑️ Delete
-              </button>
+              <Button variant="danger" icon={<Trash2 size={15} />} onClick={handleDelete} className="flex-1">
+                Delete
+              </Button>
             </div>
           </div>
         )}
 
-        {/* Error message */}
+        {/* Error state */}
         {error && (
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-start gap-2">
-              <span className="text-red-600">⚠️</span>
-              <p className="text-sm text-red-700 flex-1">{error}</p>
-            </div>
+          <div className="mt-4 flex items-start gap-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
+            <AlertCircle size={16} className="shrink-0 mt-0.5" />
+            {error}
           </div>
         )}
-      </div>
+      </Card>
 
-      {/* Extracted Resume Content - outside upload card */}
+      {/* Extracted text */}
       {extractedText && (
-        <div className="mt-6 bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            📄 Extracted Resume Content
-          </h3>
-
-          {/* Section badges */}
+        <Card title="Extracted Resume Content" className="mt-6">
           {sections && (
             <div className="flex flex-wrap gap-2 mb-4">
-              {sections.hasEmail && (
-                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                  ✉️ Email
+              {SECTION_BADGES.filter(b => sections[b.key]).map(b => (
+                <span key={b.key} className={`px-3 py-1 rounded-full text-xs font-medium ${b.color}`}>
+                  {b.label}
                 </span>
-              )}
-              {sections.hasPhone && (
-                <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
-                  📞 Phone
-                </span>
-              )}
-              {sections.hasExperience && (
-                <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
-                  💼 Experience
-                </span>
-              )}
-              {sections.hasEducation && (
-                <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                  🎓 Education
-                </span>
-              )}
-              {sections.hasSkills && (
-                <span className="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-medium">
-                  🛠️ Skills
-                </span>
-              )}
+              ))}
             </div>
           )}
-
-          {/* Scrollable extracted text */}
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
-              <span className="text-xs text-gray-500 font-medium">Raw extracted text</span>
-              <span className="text-xs text-gray-400">
-                {extractedText.length.toLocaleString()} characters
-              </span>
+          <div className="border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden">
+            <div className="bg-gray-50 dark:bg-slate-800 px-4 py-2 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
+              <span className="text-xs text-gray-500 dark:text-slate-400 font-medium">Raw extracted text</span>
+              <span className="text-xs text-gray-400 dark:text-slate-500">{extractedText.length.toLocaleString()} chars</span>
             </div>
-            <pre className="p-4 text-sm text-gray-700 whitespace-pre-wrap font-mono leading-relaxed overflow-y-auto max-h-64">
+            <pre className="p-4 text-sm text-gray-700 dark:text-slate-300 whitespace-pre-wrap font-mono leading-relaxed overflow-y-auto max-h-64 bg-white dark:bg-slate-900">
               {extractedText}
             </pre>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Tips */}
-      <div className="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
-        <h4 className="font-medium text-blue-900 mb-2">💡 Tips for best results:</h4>
-        <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+      <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+        <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-2 text-sm">Tips for best results</h4>
+        <ul className="text-sm text-blue-800 dark:text-blue-400 space-y-1 list-disc list-inside">
           <li>Use a clear, well-formatted PDF</li>
           <li>Include contact information</li>
           <li>List your experience and education</li>
           <li>Add relevant skills and keywords</li>
         </ul>
       </div>
+
     </div>
   );
 };

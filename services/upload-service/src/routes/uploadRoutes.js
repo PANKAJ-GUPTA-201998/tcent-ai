@@ -5,7 +5,7 @@ const express = require('express');
 const router = express.Router();
 const uploadController = require('../controllers/uploadController');
 const { verifyToken } = require('../middleware/auth');
-const { uploadResume, uploadProfilePicture } = require('../middleware/fileValidation');
+const { uploadResume: uploadResumeMiddleware, uploadProfilePicture } = require('../middleware/fileValidation');
 
 // Health check
 router.get('/health', (req, res) => {
@@ -20,7 +20,7 @@ router.get('/health', (req, res) => {
 router.post(
   '/resume',
   verifyToken,
-  uploadResume,
+  uploadResumeMiddleware,
   uploadController.uploadResume
 );
 
@@ -29,6 +29,12 @@ router.post(
   verifyToken,
   uploadProfilePicture,
   uploadController.uploadProfilePicture
+);
+
+router.get(
+  '/my-files',
+  verifyToken,
+  uploadController.getMyFiles
 );
 
 router.get(

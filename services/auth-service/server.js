@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./src/config/database');
 const authRoutes = require('./src/routes/auth.routes');
+const assessmentRoutes = require('./src/routes/assessment');
+const careerRoutes = require('./src/routes/career');
 
 const app = express();
 
@@ -15,6 +17,8 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/assessments', assessmentRoutes);
+app.use('/api/careers', careerRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

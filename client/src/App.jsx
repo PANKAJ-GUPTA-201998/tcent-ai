@@ -1,5 +1,8 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './components/ui/Toast';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
@@ -9,66 +12,157 @@ import Profile from './pages/Profile';
 import AICareerAdvisor from './components/ai/AICareerAdvisor';
 import ResumeUpload from './components/upload/ResumeUpload';
 import CareerDashboard from './pages/CareerDashboard';
+import CareerPathDetail from './pages/CareerPathDetail';
+import Landing from './pages/Landing';
+import Footer from './components/Footer';
+import PersonalityResults from './components/PersonalityResults';
+import { default as PersonalityQuiz } from './components/PersonalityQuiz';
+import AssessmentPage from './pages/AssessmentPage';
+import CareersPage from './pages/CareersPage';
+
+const pageVariants = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
+  exit:    { opacity: 0, y: -10, transition: { duration: 0.2, ease: 'easeIn' } },
+};
+
+const PageWrapper = ({ children }) => (
+  <motion.div
+    variants={pageVariants}
+    initial="initial"
+    animate="animate"
+    exit="exit"
+  >
+    {children}
+  </motion.div>
+);
+
+const AnimatedRoutes = () => {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Public Routes */}
+        <Route path="/landing" element={<PageWrapper><Landing /></PageWrapper>} />
+        <Route path="/login"   element={<PageWrapper><Login /></PageWrapper>} />
+        <Route path="/register" element={<PageWrapper><Register /></PageWrapper>} />
+
+        {/* Protected Routes */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <PageWrapper><Dashboard /></PageWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <PageWrapper><Profile /></PageWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ai-advisor"
+          element={
+            <ProtectedRoute>
+              <PageWrapper><AICareerAdvisor /></PageWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/upload-resume"
+          element={
+            <ProtectedRoute>
+              <PageWrapper><ResumeUpload /></PageWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/career"
+          element={
+            <ProtectedRoute>
+              <PageWrapper><CareerDashboard /></PageWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/career/:pathId"
+          element={
+            <ProtectedRoute>
+              <PageWrapper><CareerPathDetail /></PageWrapper>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/personality/quiz"
+          element={
+            <ProtectedRoute>
+              <PageWrapper><PersonalityQuiz /></PageWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/personality/results"
+          element={
+            <ProtectedRoute>
+              <PageWrapper><PersonalityResults /></PageWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/personality/results/:userId"
+          element={
+            <ProtectedRoute>
+              <PageWrapper><PersonalityResults /></PageWrapper>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/assessment"
+          element={
+            <ProtectedRoute>
+              <PageWrapper><AssessmentPage /></PageWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/careers"
+          element={
+            <ProtectedRoute>
+              <PageWrapper><CareersPage /></PageWrapper>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Catch all */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
 
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <div className="min-h-screen">
-          <Navbar />
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-
-            {/* Protected Routes */}
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/ai-advisor"
-              element={
-                <ProtectedRoute>
-                  <AICareerAdvisor />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/upload-resume"
-              element={
-                <ProtectedRoute>
-                  <ResumeUpload />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/career"
-              element={
-                <ProtectedRoute>
-                  <CareerDashboard />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Catch all */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </div>
-      </AuthProvider>
+      <ThemeProvider>
+        <ToastProvider>
+        <AuthProvider>
+          <div className="min-h-screen flex flex-col bg-white dark:bg-slate-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+            <Navbar />
+            <main className="flex-1">
+              <AnimatedRoutes />
+            </main>
+            <Footer />
+          </div>
+        </AuthProvider>
+        </ToastProvider>
+      </ThemeProvider>
     </Router>
   );
 }

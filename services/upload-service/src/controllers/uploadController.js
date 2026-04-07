@@ -135,6 +135,34 @@ const uploadProfilePicture = async (req, res) => {
 };
 
 /**
+ * Get user's uploaded files (latest resume)
+ * GET /api/upload/my-files
+ */
+const getMyFiles = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const resume = await File.findOne({ userId, fileType: 'resume', status: 'completed' })
+      .sort({ uploadedAt: -1 });
+
+    res.json({
+      success: true,
+      resume: resume ? {
+        id: resume._id,
+        name: resume.originalName,
+        url: resume.cloudinaryUrl,
+        size: resume.fileSize,
+        extractedText: resume.extractedText,
+        uploadedAt: resume.uploadedAt
+      } : null
+    });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch files.' });
+  }
+};
+
+/**
  * Get File Metadata
  * GET /api/upload/file/:fileId
  */
@@ -175,5 +203,6 @@ const getFile = async (req, res) => {
 module.exports = {
   uploadResume,
   uploadProfilePicture,
-  getFile
+  getFile,
+  getMyFiles
 };

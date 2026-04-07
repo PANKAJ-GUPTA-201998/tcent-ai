@@ -32,10 +32,9 @@ export const uploadResume = async (file, onProgress) => {
       `${UPLOAD_SERVICE_URL}/resume`,
       formData,
       {
-        ...getAuthHeader(),
         headers: {
-          ...getAuthHeader().headers,
-          'Content-Type': 'multipart/form-data'
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          // Let axios set Content-Type with the correct multipart boundary automatically
         },
         onUploadProgress: (progressEvent) => {
           const progress = Math.round(
@@ -67,10 +66,8 @@ export const uploadProfilePicture = async (file, onProgress) => {
       `${UPLOAD_SERVICE_URL}/profile-picture`,
       formData,
       {
-        ...getAuthHeader(),
         headers: {
-          ...getAuthHeader().headers,
-          'Content-Type': 'multipart/form-data'
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
         onUploadProgress: (progressEvent) => {
           const progress = Math.round(

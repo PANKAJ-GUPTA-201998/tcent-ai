@@ -9,6 +9,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const aiRoutes = require('./routes/aiRoutes');
+const careerRoutes = require('./routes/careerRoutes');
 const cacheService = require('./services/cacheService');
 
 const app = express();
@@ -21,7 +22,14 @@ const PORT = process.env.PORT || 3003;
 app.use(helmet());
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow all localhost origins (any port) in development
+    if (!origin || origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
@@ -52,6 +60,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/ai', aiRoutes);
+app.use('/api/career', careerRoutes);
 
 // 404 handler
 app.use((req, res) => {
