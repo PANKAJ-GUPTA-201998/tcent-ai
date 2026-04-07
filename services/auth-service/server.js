@@ -12,7 +12,15 @@ const app = express();
 connectDB();
 
 // Middleware
-app.use(cors()); // Enable CORS for all origins
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://tcent-ai.vercel.app',
+    process.env.FRONTEND_URL
+  ].filter(Boolean),
+  credentials: true
+}));
 app.use(express.json());
 
 // Routes
