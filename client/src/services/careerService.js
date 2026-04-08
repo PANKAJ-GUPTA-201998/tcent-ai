@@ -4,7 +4,7 @@
 
 import axios from 'axios';
 
-const AI_SERVICE_URL = import.meta.env.VITE_AI_URL || 'http://localhost:3003/api/career';
+const AI_SERVICE_URL = (import.meta.env.VITE_AI_URL || 'http://localhost:3003') + '/api/career';
 const UPLOAD_SERVICE_URL = import.meta.env.VITE_UPLOAD_URL || 'http://localhost:3004/api/upload';
 console.log('Upload URL:', UPLOAD_SERVICE_URL);
 
