@@ -60,6 +60,39 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.get('/api/test-db', async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    const uri = process.env.MONGODB_URI;
+
+    console.log('MONGODB_URI exists:', !!uri);
+    console.log('URI starts with:', uri ? uri.substring(0, 20) + '...' : 'undefined');
+    console.log('Mongoose connection state:', mongoose.connection.readyState);
+
+    if (mongoose.connection.readyState === 1) {
+      const collections = await mongoose.connection.db.listCollections().toArray();
+      return res.json({
+        status: 'connected',
+        collections: collections.map(c => c.name),
+      });
+    }
+
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+
+    res.json({ status: 'connected successfully' });
+  } catch (error) {
+    console.error('DB Test Error:', error.message);
+    res.status(500).json({
+      status: 'failed',
+      error: error.message,
+      mongoUri: process.env.MONGODB_URI ? 'exists' : 'MISSING',
+    });
+  }
+});
+
 app.use('/api/auth',        authRoutes);
 app.use('/api/upload',      uploadRoutes);
 app.use('/api/ai',          aiRoutes);
