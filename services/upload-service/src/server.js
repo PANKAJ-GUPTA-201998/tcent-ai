@@ -1,9 +1,3 @@
-// ============================================
-// Upload Service - Main Server
-// ============================================
-// Port: 3004
-// Handles resume and profile picture uploads
-
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -15,10 +9,7 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const app = express();
 const PORT = process.env.PORT || 3004;
 
-// ============================================
 // Middleware
-// ============================================
-
 app.use(helmet());
 
 app.use(cors({
@@ -36,37 +27,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(mongoSanitize());
 
-// Request logging
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
   next();
 });
 
-// ============================================
-// Routes
-// ============================================
-
+// Root health check — Render pings GET / by default
 app.get('/', (req, res) => {
-  res.json({
-    service: 'Tcent.AI - Upload Service',
-    version: '1.0.0',
-    status: 'running',
-    endpoints: [
-      'POST /api/upload/resume',
-      'POST /api/upload/profile-picture',
-      'GET /api/upload/file/:fileId'
-    ]
-  });
+  res.json({ status: 'ok', service: 'upload-service' });
 });
 
 app.use('/api/upload', uploadRoutes);
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found'
-  });
+  res.status(404).json({ success: false, message: 'Route not found' });
 });
 
 // Error handler
@@ -78,32 +53,23 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ============================================
-// Database Connection & Start Server
-// ============================================
+// Start HTTP server first so Render health check passes immediately
+app.listen(PORT, '0.0.0.0', () => {
+  console.log('='.repeat(50));
+  console.log('Tcent.AI - Upload Service');
+  console.log('='.repeat(50));
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log('='.repeat(50));
+});
 
-const startServer = async () => {
-  try {
-    // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ MongoDB connected');
-
-    // Start Express server
-    app.listen(PORT, () => {
-      console.log('\n' + '='.repeat(50));
-      console.log('🚀 Tcent.AI - Upload Service');
-      console.log('='.repeat(50));
-      console.log(`✅ Server running on port ${PORT}`);
-      console.log(`✅ Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`📝 API Docs: http://localhost:${PORT}`);
-      console.log('='.repeat(50) + '\n');
-    });
-
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
-};
+// Connect to MongoDB after server is up — failure won't crash the process
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('MongoDB connected'))
+  .catch((err) => {
+    console.error('MongoDB connection failed:', err.message);
+    console.error('Service is running but DB-dependent routes will fail until MongoDB is reachable.');
+  });
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
@@ -113,11 +79,9 @@ process.on('SIGTERM', async () => {
 });
 
 process.on('SIGINT', async () => {
-  console.log('\nSIGINT received. Shutting down gracefully...');
+  console.log('SIGINT received. Shutting down gracefully...');
   await mongoose.connection.close();
   process.exit(0);
 });
-
-startServer();
 
 module.exports = app;

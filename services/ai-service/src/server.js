@@ -87,7 +87,7 @@ const startServer = async () => {
     await cacheService.connect();
 
     // Start Express server
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log('\n' + '='.repeat(50));
       console.log('🚀 Tcent.AI - AI Service');
       console.log('='.repeat(50));
@@ -98,8 +98,11 @@ const startServer = async () => {
     });
 
   } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
+    console.error('Cache connection failed, starting without Redis:', error.message);
+    // Start server anyway — cacheService falls back to in-memory automatically
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Tcent.AI - AI Service running on port ${PORT} (no cache)`);
+    });
   }
 };
 

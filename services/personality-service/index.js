@@ -7,9 +7,6 @@ const { apiLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
-
 // Middleware
 app.use(cors({
   origin: [
@@ -23,7 +20,11 @@ app.use(cors({
 app.use(express.json());
 app.use(apiLimiter);
 
-// Health check
+// Root health check — Render pings GET / by default
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', service: 'personality-service' });
+});
+
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', service: 'Personality Service', port: process.env.PORT || 3005 });
 });
@@ -34,7 +35,14 @@ app.use('/api/personality', require('./routes/personality'));
 // Error handler — must be last
 app.use(errorHandler);
 
+// Start HTTP server first so Render health check passes immediately
 const PORT = process.env.PORT || 3005;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Personality Service running on port ${PORT}`);
+});
+
+// Connect to MongoDB after server is up — failure won't crash the process
+connectDB().catch((err) => {
+  console.error('MongoDB connection failed:', err.message);
+  console.error('Service is running but DB-dependent routes will fail until MongoDB is reachable.');
 });
