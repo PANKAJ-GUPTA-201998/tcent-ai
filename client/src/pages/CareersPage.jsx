@@ -6,7 +6,7 @@ import axios from 'axios';
 import Button from '../components/ui/Button';
 import Skeleton from '../components/ui/Skeleton';
 
-const PERSONALITY_API = 'http://localhost:3005/api/personality';
+const PERSONALITY_API = (import.meta.env.VITE_PERSONALITY_URL || 'http://localhost:3005') + '/api/personality';
 
 const getAuthHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem('token')}`,

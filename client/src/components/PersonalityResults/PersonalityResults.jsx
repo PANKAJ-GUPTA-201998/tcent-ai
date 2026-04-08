@@ -13,7 +13,7 @@ import PersonalitySummary from './PersonalitySummary';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const PERSONALITY_API = 'http://localhost:3005/api/personality';
+const PERSONALITY_API = (import.meta.env.VITE_PERSONALITY_URL || 'http://localhost:3005') + '/api/personality';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
