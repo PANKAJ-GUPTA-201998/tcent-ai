@@ -5,7 +5,7 @@
 
 import axios from 'axios';
 
-const AI_SERVICE_URL = (import.meta.env.VITE_AI_URL || 'http://localhost:3003') + '/api/ai';
+const AI_SERVICE_URL = '/api/ai';
 
 // Get token from localStorage
 const getAuthHeader = () => {

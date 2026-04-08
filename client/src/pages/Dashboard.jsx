@@ -9,7 +9,7 @@ import StatCard from '../components/ui/StatCard';
 import Card from '../components/ui/Card';
 import Skeleton from '../components/ui/Skeleton';
 
-const PERSONALITY_API = (import.meta.env.VITE_PERSONALITY_URL || 'http://localhost:3005') + '/api/personality';
+const PERSONALITY_API = '/api/personality';
 
 const getUserIdFromToken = () => {
   const token = localStorage.getItem('token');

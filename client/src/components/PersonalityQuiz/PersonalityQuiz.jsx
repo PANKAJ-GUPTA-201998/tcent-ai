@@ -13,7 +13,7 @@ import QuestionCard from './QuestionCard';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const PERSONALITY_API = (import.meta.env.VITE_PERSONALITY_URL || 'http://localhost:3005') + '/api/personality';
+const PERSONALITY_API = '/api/personality';
 const LS_KEY = 'tcent_quiz_progress';
 const QUESTIONS_PER_PAGE = 3;
 const RESUME_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours

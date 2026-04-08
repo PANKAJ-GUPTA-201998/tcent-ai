@@ -5,8 +5,7 @@
 
 import axios from 'axios';
 
-const UPLOAD_SERVICE_URL = import.meta.env.VITE_UPLOAD_URL || 'http://localhost:3004/api/upload';
-console.log('Upload URL:', UPLOAD_SERVICE_URL);
+const UPLOAD_SERVICE_URL = '/api/upload';
 
 // Get token from localStorage
 const getAuthHeader = () => {
