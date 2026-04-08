@@ -14,6 +14,40 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./_lib/db');
 
+// ─── Mongoose singleton enforcement ──────────────────────────────────────────
+// Service directories commit their own node_modules/mongoose to git.  When
+// Vercel deploys, both root and service-level mongoose packages are present,
+// creating separate instances — each with its own connection state.  Models
+// registered on a service instance never see the connection established by
+// connectDB (which uses the root instance), causing buffering timeouts.
+//
+// Fix: override the require cache for every service mongoose path so they all
+// resolve to the root instance.  This must happen before any route module is
+// required (route requires trigger model file requires).
+(function enforceMongooseSingleton() {
+  const rootMongoosePath = require.resolve('mongoose');
+  const rootEntry = require.cache[rootMongoosePath];
+  if (!rootEntry) return; // shouldn't happen, but guard anyway
+
+  const servicePaths = [
+    '../services/auth-service/node_modules/mongoose',
+    '../services/upload-service/node_modules/mongoose',
+    '../services/personality-service/node_modules/mongoose',
+    '../services/ai-service/node_modules/mongoose',
+  ];
+
+  servicePaths.forEach((rel) => {
+    try {
+      const resolved = require.resolve(rel);
+      if (resolved !== rootMongoosePath) {
+        require.cache[resolved] = rootEntry;
+      }
+    } catch (_) {
+      // path doesn't exist — fine, skip
+    }
+  });
+}());
+
 // ─── Route modules (reused from service directories) ─────────────────────────
 
 const authRoutes        = require('../services/auth-service/src/routes/auth.routes');
@@ -47,11 +81,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(async (req, res, next) => {
   try {
     await connectDB();
+    next();
   } catch (err) {
     console.error('[db] connection failed:', err.message);
-    // Don't block the request — routes that need DB will fail naturally
+    res.status(503).json({ success: false, message: 'Database unavailable. Please try again shortly.' });
   }
-  next();
 });
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
