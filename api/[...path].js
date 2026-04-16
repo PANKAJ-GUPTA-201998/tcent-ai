@@ -34,6 +34,7 @@ const connectDB = require('./_lib/db');
     '../services/upload-service/node_modules/mongoose',
     '../services/personality-service/node_modules/mongoose',
     '../services/ai-service/node_modules/mongoose',
+    '../services/ats-service/node_modules/mongoose',
   ];
 
   servicePaths.forEach((rel) => {
@@ -55,6 +56,7 @@ const uploadRoutes      = require('../services/upload-service/src/routes/uploadR
 const aiRoutes          = require('../services/ai-service/src/routes/aiRoutes');
 const careerRoutes      = require('../services/ai-service/src/routes/careerRoutes');
 const personalityRoutes = require('../services/personality-service/routes/personality');
+const atsRoutes         = require('../services/ats-service/routes/ats');
 
 // ─── App setup ────────────────────────────────────────────────────────────────
 
@@ -132,6 +134,7 @@ app.use('/api/upload',      uploadRoutes);
 app.use('/api/ai',          aiRoutes);
 app.use('/api/career',      careerRoutes);
 app.use('/api/personality', personalityRoutes);
+app.use('/api/ats',         atsRoutes);
 
 // ─── Fallback ─────────────────────────────────────────────────────────────────
 

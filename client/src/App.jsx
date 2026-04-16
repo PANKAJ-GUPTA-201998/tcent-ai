@@ -19,6 +19,7 @@ import PersonalityResults from './components/PersonalityResults';
 import { default as PersonalityQuiz } from './components/PersonalityQuiz';
 import AssessmentPage from './pages/AssessmentPage';
 import CareersPage from './pages/CareersPage';
+import ATSChecker from './pages/ATSChecker';
 
 const pageVariants = {
   initial: { opacity: 0, y: 16 },
@@ -136,6 +137,14 @@ const AnimatedRoutes = () => {
           element={
             <ProtectedRoute>
               <PageWrapper><CareersPage /></PageWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ats-checker"
+          element={
+            <ProtectedRoute>
+              <PageWrapper><ATSChecker /></PageWrapper>
             </ProtectedRoute>
           }
         />

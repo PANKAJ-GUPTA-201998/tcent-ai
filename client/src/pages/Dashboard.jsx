@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, BarChart2, MessageCircle, Upload, Brain, ArrowRight, ClipboardList } from 'lucide-react';
+import { User, BarChart2, MessageCircle, Upload, Brain, ArrowRight, ClipboardList, ScanSearch } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
@@ -79,6 +79,14 @@ const QUICK_ACTIONS = [
     description: 'Discover your ideal career path in 15 mins.',
     to: '/assessment',
     color: 'bg-violet-100 text-violet-600 group-hover:bg-violet-200',
+    highlight: true,
+  },
+  {
+    icon: ScanSearch,
+    label: 'ATS Resume Matcher',
+    description: 'Check how well your resume matches a job description.',
+    to: '/ats-checker',
+    color: 'bg-cyan-50 text-cyan-600 group-hover:bg-cyan-100',
     highlight: true,
   },
 ];
