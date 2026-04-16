@@ -1,5 +1,11 @@
 {
+  "version": 2,
+  "installCommand": "npm install",
   "buildCommand": "cd client && npm install && npm run build",
   "outputDirectory": "client/dist",
-  "devCommand": "cd client && npm run dev"
+  "devCommand": "cd client && npm run dev -- --port 5174",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/[...path]" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
 }

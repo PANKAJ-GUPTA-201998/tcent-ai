@@ -6,14 +6,12 @@ export default defineConfig({
   server: {
     port: 5174,
     proxy: {
-      '/api/auth': {
-        target: 'http://localhost:3001',
-        changeOrigin: true
+      // Proxy all /api/* calls to vercel dev (port 3000)
+      // Used when running `npm run dev` directly inside client/
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
       },
-      '/api/profile': {
-        target: 'http://localhost:3002',
-        changeOrigin: true
-      }
-    }
-  }
+    },
+  },
 })
