@@ -19,7 +19,7 @@ const PHASES = [
       {
         label: 'The Degree Mismatch',
         description:
-          "Your college degree doesn't match a single job description. Everyone wants "experience" but nobody hires freshers.",
+          "Your college degree doesn't match a single job description. Everyone wants 'experience' but nobody hires freshers.",
       },
       {
         label: 'The Stream Paralysis',
@@ -46,7 +46,7 @@ const PHASES = [
     stuckPercent: 54,
     color: '#8B5CF6',
     colorRgb: '139, 92, 246',
-    teaser: '3 years of solid work. Salary frozen. You're starting to wonder if this is it.',
+    teaser: "3 years of solid work. Salary frozen. You're starting to wonder if this is it.",
     feature: 'Skill Gap Detection',
     featurePath: '/register',
     pains: [
@@ -92,7 +92,7 @@ const PHASES = [
       {
         label: 'The Rusting Expertise',
         description:
-          'Your technical skills are quietly decaying while you sit in back-to-back meetings reviewing others' work.',
+          "Your technical skills are quietly decaying while you sit in back-to-back meetings reviewing others' work.",
       },
       {
         label: 'The Political Ceiling',
