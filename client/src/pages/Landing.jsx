@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import PhaseJourney from '../components/PhaseJourney';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 28 },
@@ -173,6 +174,9 @@ const Landing = () => (
         ))}
       </div>
     </section>
+
+    {/* Phase Journey */}
+    <PhaseJourney />
 
     {/* CTA banner */}
     <section className="bg-gradient-to-r from-slate-800 to-slate-900 text-white">
