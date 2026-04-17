@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
 /* ─── Phase data ──────────────────────────────────────────── */
@@ -138,46 +138,89 @@ const PHASES = [
   },
 ];
 
-/* ─── Animation variants ──────────────────────────────────── */
-const sectionVariants = {
-  hidden: { opacity: 0, y: 48 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: 'easeOut' } },
-};
-
-const phaseVariant = {
-  hidden: { opacity: 0, y: 32 },
-  visible: (i) => ({
+/* ─── Slide animation ─────────────────────────────────────── */
+const slideVariants = {
+  enter: (dir) => ({
+    x: dir > 0 ? '60%' : '-60%',
+    opacity: 0,
+    scale: 0.97,
+  }),
+  center: {
+    x: 0,
     opacity: 1,
-    y: 0,
-    transition: { duration: 0.55, delay: i * 0.12, ease: 'easeOut' },
+    scale: 1,
+    transition: { duration: 0.42, ease: [0.4, 0, 0.2, 1] },
+  },
+  exit: (dir) => ({
+    x: dir > 0 ? '-60%' : '60%',
+    opacity: 0,
+    scale: 0.97,
+    transition: { duration: 0.32, ease: [0.4, 0, 0.2, 1] },
   }),
 };
 
-const painCardVariant = {
+const painVariant = {
   hidden: { opacity: 0, y: 10 },
   visible: (i) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.35, delay: i * 0.07, ease: 'easeOut' },
+    transition: { duration: 0.3, delay: i * 0.07 },
   }),
 };
 
-const badgePulse = {
-  initial: { scale: 1 },
-  animate: {
-    scale: [1, 1.06, 1],
-    transition: { duration: 0.6, delay: 0.5, ease: 'easeInOut' },
-  },
-};
+/* ─── Arrow button ────────────────────────────────────────── */
+const ArrowBtn = ({ onClick, disabled, direction, color, colorRgb }) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    aria-label={direction === 'prev' ? 'Previous phase' : 'Next phase'}
+    style={{
+      width: '2.75rem',
+      height: '2.75rem',
+      borderRadius: '50%',
+      border: `1px solid rgba(${colorRgb}, ${disabled ? '0.1' : '0.35'})`,
+      background: disabled ? 'rgba(255,255,255,0.03)' : `rgba(${colorRgb}, 0.12)`,
+      color: disabled ? '#334155' : color,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      cursor: disabled ? 'not-allowed' : 'pointer',
+      transition: 'all 0.2s ease',
+      flexShrink: 0,
+    }}
+    onMouseEnter={(e) => {
+      if (!disabled) {
+        e.currentTarget.style.background = `rgba(${colorRgb}, 0.22)`;
+        e.currentTarget.style.borderColor = `rgba(${colorRgb}, 0.6)`;
+      }
+    }}
+    onMouseLeave={(e) => {
+      if (!disabled) {
+        e.currentTarget.style.background = `rgba(${colorRgb}, 0.12)`;
+        e.currentTarget.style.borderColor = `rgba(${colorRgb}, 0.35)`;
+      }
+    }}
+  >
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path
+        d={direction === 'prev' ? 'M10 3L5 8L10 13' : 'M6 3L11 8L6 13'}
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  </button>
+);
 
-/* ─── Grain texture overlay ───────────────────────────────── */
+/* ─── Grain overlay ───────────────────────────────────────── */
 const GrainOverlay = () => (
   <div
     aria-hidden="true"
     style={{
       position: 'absolute',
       inset: 0,
-      opacity: 0.045,
+      opacity: 0.04,
       backgroundImage:
         'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.75\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")',
       backgroundRepeat: 'repeat',
@@ -190,7 +233,25 @@ const GrainOverlay = () => (
 
 /* ─── Main component ──────────────────────────────────────── */
 const PhaseJourney = () => {
-  const [hoveredBtn, setHoveredBtn] = useState(null);
+  const [current, setCurrent] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const [hoveredBtn, setHoveredBtn] = useState(false);
+
+  const phase = PHASES[current];
+
+  const go = (idx) => {
+    setDirection(idx > current ? 1 : -1);
+    setCurrent(idx);
+  };
+
+  const prev = () => { if (current > 0) go(current - 1); };
+  const next = () => { if (current < PHASES.length - 1) go(current + 1); };
+
+  /* drag-to-swipe */
+  const handleDragEnd = (_, info) => {
+    if (info.offset.x < -60) next();
+    else if (info.offset.x > 60) prev();
+  };
 
   return (
     <section
@@ -199,18 +260,18 @@ const PhaseJourney = () => {
     >
       <GrainOverlay />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-24">
+      <div className="relative z-10 max-w-4xl mx-auto px-6 py-20">
 
-        {/* ── Section heading ── */}
+        {/* ── Heading ── */}
         <motion.div
-          className="text-center mb-20"
-          variants={sectionVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.3 }}
+          className="text-center mb-14"
+          initial={{ opacity: 0, y: 32 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
         >
           <span
-            className="inline-block px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase mb-6"
+            className="inline-block px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase mb-5"
             style={{
               background: 'rgba(59,130,246,0.12)',
               color: '#60A5FA',
@@ -221,7 +282,7 @@ const PhaseJourney = () => {
           </span>
 
           <h2
-            className="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight mb-5"
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight mb-4"
             style={{
               background: 'linear-gradient(135deg, #FFFFFF 0%, #94A3B8 100%)',
               WebkitBackgroundClip: 'text',
@@ -243,120 +304,162 @@ const PhaseJourney = () => {
             </span>
           </h2>
 
-          <p
-            className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed"
-            style={{ color: '#64748B' }}
-          >
+          <p className="text-base sm:text-lg max-w-2xl mx-auto" style={{ color: '#64748B' }}>
             We've spoken with{' '}
             <span style={{ color: '#94A3B8', fontWeight: 600 }}>1,000+ Indian professionals</span>.
-            Here's exactly where they get blocked — and why most generic advice doesn't help.
+            Here's exactly where they get blocked.
           </p>
         </motion.div>
 
-        {/* ── All 4 phases — always visible ── */}
-        <div className="space-y-10">
-          {PHASES.map((phase, idx) => (
+        {/* ── Phase step indicators ── */}
+        <div className="flex items-center justify-center gap-2 mb-8">
+          {PHASES.map((p, i) => (
+            <button
+              key={p.number}
+              onClick={() => go(i)}
+              aria-label={`Go to phase ${i + 1}`}
+              style={{
+                height: '4px',
+                width: current === i ? '2.5rem' : '1rem',
+                borderRadius: '9999px',
+                background: current === i ? p.color : 'rgba(255,255,255,0.12)',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.35s ease',
+                padding: 0,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* ── Slider card ── */}
+        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '1.25rem' }}>
+          <AnimatePresence custom={direction} mode="wait">
             <motion.div
-              key={phase.number}
-              custom={idx}
-              variants={phaseVariant}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.12 }}
-              className="rounded-2xl overflow-hidden"
+              key={current}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.15}
+              onDragEnd={handleDragEnd}
               style={{
                 background: '#0F0F17',
-                border: `1px solid rgba(${phase.colorRgb}, 0.18)`,
-                boxShadow: `0 0 40px rgba(${phase.colorRgb}, 0.06)`,
+                border: `1px solid rgba(${phase.colorRgb}, 0.2)`,
+                boxShadow: `0 0 60px rgba(${phase.colorRgb}, 0.08)`,
+                borderRadius: '1.25rem',
+                overflow: 'hidden',
+                cursor: 'grab',
+                userSelect: 'none',
               }}
             >
-              {/* Phase header */}
+              {/* Card header */}
               <div
-                className="px-7 pt-7 pb-5"
                 style={{
-                  borderLeft: `3px solid ${phase.color}`,
+                  padding: '2rem 2rem 1.5rem',
+                  borderLeft: `4px solid ${phase.color}`,
+                  background: `linear-gradient(135deg, rgba(${phase.colorRgb}, 0.07) 0%, transparent 60%)`,
                 }}
               >
-                <div className="flex items-start gap-5">
-                  {/* Large faded number */}
-                  <span
-                    className="font-black leading-none select-none flex-shrink-0"
-                    style={{
-                      fontSize: '3.5rem',
-                      color: `rgba(${phase.colorRgb}, 0.2)`,
-                      fontVariantNumeric: 'tabular-nums',
-                      lineHeight: 1,
-                    }}
-                  >
-                    {phase.number}
-                  </span>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-3 mb-2">
-                      <h3
-                        className="text-xl sm:text-2xl font-bold"
-                        style={{ color: '#F1F5F9' }}
-                      >
-                        {phase.title}
-                      </h3>
-                      <span
-                        className="text-xs font-medium px-2.5 py-0.5 rounded-full"
-                        style={{
-                          background: `rgba(${phase.colorRgb}, 0.12)`,
-                          color: phase.color,
-                          border: `1px solid rgba(${phase.colorRgb}, 0.25)`,
-                        }}
-                      >
-                        {phase.subtitle}
-                      </span>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-5">
+                    {/* Watermark number */}
+                    <span
+                      className="font-black select-none flex-shrink-0"
+                      style={{
+                        fontSize: '4rem',
+                        lineHeight: 1,
+                        color: `rgba(${phase.colorRgb}, 0.18)`,
+                        fontVariantNumeric: 'tabular-nums',
+                      }}
+                    >
+                      {phase.number}
+                    </span>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <h3
+                          className="text-2xl sm:text-3xl font-bold"
+                          style={{ color: '#F1F5F9' }}
+                        >
+                          {phase.title}
+                        </h3>
+                        <span
+                          className="text-xs font-medium px-2.5 py-0.5 rounded-full"
+                          style={{
+                            background: `rgba(${phase.colorRgb}, 0.15)`,
+                            color: phase.color,
+                            border: `1px solid rgba(${phase.colorRgb}, 0.3)`,
+                          }}
+                        >
+                          {phase.subtitle}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="text-xs" style={{ color: '#475569' }}>
+                          {phase.years}
+                        </span>
+                        <motion.span
+                          className="text-xs font-bold px-2.5 py-0.5 rounded-full"
+                          style={{
+                            background: `rgba(${phase.colorRgb}, 0.18)`,
+                            color: phase.color,
+                            border: `1px solid rgba(${phase.colorRgb}, 0.35)`,
+                          }}
+                          initial={{ scale: 0.9, opacity: 0 }}
+                          animate={{ scale: [0.9, 1.06, 1], opacity: 1 }}
+                          transition={{ duration: 0.5, delay: 0.1 }}
+                        >
+                          {phase.stuckPercent}% get stuck here
+                        </motion.span>
+                      </div>
                     </div>
+                  </div>
 
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className="text-xs" style={{ color: '#475569' }}>
-                        {phase.years}
-                      </span>
-                      <motion.span
-                        className="text-xs font-semibold px-2.5 py-0.5 rounded-full"
-                        style={{
-                          background: `rgba(${phase.colorRgb}, 0.18)`,
-                          color: phase.color,
-                          border: `1px solid rgba(${phase.colorRgb}, 0.3)`,
-                        }}
-                        initial="initial"
-                        whileInView="animate"
-                        viewport={{ once: true }}
-                        variants={badgePulse}
-                      >
-                        {phase.stuckPercent}% get stuck here
-                      </motion.span>
-                    </div>
+                  {/* Nav arrows — top right */}
+                  <div className="flex items-center gap-2 flex-shrink-0 mt-1">
+                    <ArrowBtn
+                      onClick={prev}
+                      disabled={current === 0}
+                      direction="prev"
+                      color={phase.color}
+                      colorRgb={phase.colorRgb}
+                    />
+                    <ArrowBtn
+                      onClick={next}
+                      disabled={current === PHASES.length - 1}
+                      direction="next"
+                      color={phase.color}
+                      colorRgb={phase.colorRgb}
+                    />
                   </div>
                 </div>
               </div>
 
-              {/* Thin separator */}
+              {/* Separator */}
               <div
                 style={{
                   height: '1px',
-                  background: `linear-gradient(90deg, rgba(${phase.colorRgb}, 0.3), rgba(${phase.colorRgb}, 0.06) 60%, transparent)`,
+                  background: `linear-gradient(90deg, rgba(${phase.colorRgb}, 0.4), rgba(${phase.colorRgb}, 0.05) 70%, transparent)`,
                 }}
               />
 
-              {/* Pain cards */}
-              <div className="px-7 py-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+              {/* Pain grid */}
+              <div style={{ padding: '1.75rem 2rem' }}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-7">
                   {phase.pains.map((pain, i) => (
                     <motion.div
                       key={pain.label}
                       custom={i}
-                      variants={painCardVariant}
+                      variants={painVariant}
                       initial="hidden"
-                      whileInView="visible"
-                      viewport={{ once: true, amount: 0.2 }}
+                      animate="visible"
                       className="rounded-xl px-4 py-4"
                       style={{
                         background: '#13131A',
-                        borderLeft: `3px solid rgba(${phase.colorRgb}, 0.4)`,
+                        borderLeft: `3px solid rgba(${phase.colorRgb}, 0.45)`,
                       }}
                     >
                       {i === 0 && (
@@ -367,73 +470,76 @@ const PhaseJourney = () => {
                           Sound familiar?
                         </p>
                       )}
-                      <p
-                        className="text-sm font-semibold mb-1"
-                        style={{ color: '#CBD5E1' }}
-                      >
+                      <p className="text-sm font-semibold mb-1" style={{ color: '#CBD5E1' }}>
                         {pain.label}
                       </p>
-                      <p
-                        className="text-sm leading-relaxed"
-                        style={{ color: '#475569' }}
-                      >
+                      <p className="text-sm leading-relaxed" style={{ color: '#475569' }}>
                         {pain.description}
                       </p>
                     </motion.div>
                   ))}
                 </div>
 
-                {/* Feature CTA */}
-                <Link
-                  to={phase.featurePath}
-                  className="inline-flex items-center gap-2 text-sm font-semibold rounded-lg px-5 py-2.5 transition-all duration-300"
-                  style={{
-                    background: `rgba(${phase.colorRgb}, 0.12)`,
-                    color: phase.color,
-                    border: `1px solid rgba(${phase.colorRgb}, 0.25)`,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = `rgba(${phase.colorRgb}, 0.22)`;
-                    e.currentTarget.style.borderColor = `rgba(${phase.colorRgb}, 0.5)`;
-                    setHoveredBtn(idx);
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = `rgba(${phase.colorRgb}, 0.12)`;
-                    e.currentTarget.style.borderColor = `rgba(${phase.colorRgb}, 0.25)`;
-                    setHoveredBtn(null);
-                  }}
-                >
-                  See how Tcent.AI solves this
-                  {hoveredBtn === idx && (
-                    <span style={{ color: '#94A3B8', fontWeight: 400 }}>
-                      {' '}— {phase.feature}
-                    </span>
-                  )}
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                    <path
-                      d="M2.5 7H11.5M11.5 7L8 3.5M11.5 7L8 10.5"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </Link>
+                {/* Feature CTA + counter */}
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <Link
+                    to={phase.featurePath}
+                    className="inline-flex items-center gap-2 text-sm font-semibold rounded-lg px-5 py-2.5 transition-all duration-250"
+                    style={{
+                      background: `rgba(${phase.colorRgb}, 0.12)`,
+                      color: phase.color,
+                      border: `1px solid rgba(${phase.colorRgb}, 0.25)`,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = `rgba(${phase.colorRgb}, 0.22)`;
+                      e.currentTarget.style.borderColor = `rgba(${phase.colorRgb}, 0.55)`;
+                      setHoveredBtn(true);
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = `rgba(${phase.colorRgb}, 0.12)`;
+                      e.currentTarget.style.borderColor = `rgba(${phase.colorRgb}, 0.25)`;
+                      setHoveredBtn(false);
+                    }}
+                  >
+                    See how Tcent.AI solves this
+                    {hoveredBtn && (
+                      <span style={{ color: '#94A3B8', fontWeight: 400 }}>
+                        {' '}— {phase.feature}
+                      </span>
+                    )}
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                      <path
+                        d="M2.5 7H11.5M11.5 7L8 3.5M11.5 7L8 10.5"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </Link>
+
+                  {/* Phase counter */}
+                  <span className="text-xs tabular-nums" style={{ color: '#334155' }}>
+                    Phase{' '}
+                    <span style={{ color: phase.color, fontWeight: 700 }}>{current + 1}</span>
+                    {' '}of {PHASES.length}
+                  </span>
+                </div>
               </div>
             </motion.div>
-          ))}
+          </AnimatePresence>
         </div>
 
         {/* ── Bottom CTA ── */}
         <motion.div
-          className="mt-20 text-center"
-          variants={sectionVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.5 }}
+          className="mt-14 text-center"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.6 }}
+          transition={{ duration: 0.55, ease: 'easeOut' }}
         >
           <p
-            className="text-2xl sm:text-3xl font-bold mb-4"
+            className="text-xl sm:text-2xl font-bold mb-3"
             style={{
               background: 'linear-gradient(135deg, #F1F5F9 0%, #94A3B8 100%)',
               WebkitBackgroundClip: 'text',
@@ -443,7 +549,7 @@ const PhaseJourney = () => {
           >
             You're probably in one of these phases right now.
           </p>
-          <p className="text-sm mb-8" style={{ color: '#475569' }}>
+          <p className="text-sm mb-7" style={{ color: '#475569' }}>
             Tcent.AI identifies your phase instantly and builds a personalised roadmap out of it.
           </p>
           <Link
@@ -454,7 +560,7 @@ const PhaseJourney = () => {
               boxShadow: '0 0 32px rgba(59,130,246,0.25)',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 0 48px rgba(59,130,246,0.4)';
+              e.currentTarget.style.boxShadow = '0 0 52px rgba(59,130,246,0.45)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.boxShadow = '0 0 32px rgba(59,130,246,0.25)';
