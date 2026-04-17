@@ -27,7 +27,7 @@ const Navbar = () => {
           <div className="flex items-center space-x-6">
             {isAuthenticated ? (
               <>
-                <Link to="/" className="text-slate-300 hover:text-white transition">
+                <Link to="/dashboard" className="text-slate-300 hover:text-white transition">
                   Dashboard
                 </Link>
                 <Link to="/profile" className="text-slate-300 hover:text-white transition">

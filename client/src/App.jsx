@@ -45,13 +45,13 @@ const AnimatedRoutes = () => {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         {/* Public Routes */}
-        <Route path="/landing" element={<PageWrapper><Landing /></PageWrapper>} />
+        <Route path="/" element={<PageWrapper><Landing /></PageWrapper>} />
         <Route path="/login"   element={<PageWrapper><Login /></PageWrapper>} />
         <Route path="/register" element={<PageWrapper><Register /></PageWrapper>} />
 
         {/* Protected Routes */}
         <Route
-          path="/"
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <PageWrapper><Dashboard /></PageWrapper>
@@ -150,7 +150,7 @@ const AnimatedRoutes = () => {
         />
 
         {/* Catch all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </AnimatePresence>
   );
