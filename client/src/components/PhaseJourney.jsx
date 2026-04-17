@@ -14,26 +14,28 @@ const PHASES = [
     colorRgb: '59, 130, 246',
     feature: 'AI Career Path Matching',
     featurePath: '/register',
+    forWho: 'Fresh graduates · First-jobbers · People who picked a stream and now regret it',
+    stake: 'The first 2 years set the trajectory for the next 20. Most people lose them to guesswork.',
     pains: [
       {
-        label: 'The Degree Mismatch',
+        label: 'ATS Rejects You Before a Human Reads Your Resume',
         description:
-          "Your college degree doesn't match a single job description. Everyone wants 'experience' but nobody hires freshers.",
+          "You applied to 80+ jobs. Got 2 callbacks. Your resume isn't bad — it's invisible. Automated filters kill it before any recruiter sees it.",
       },
       {
-        label: 'The Stream Paralysis',
+        label: 'Your Degree Means Nothing in the Job Market',
         description:
-          'MBA vs. coding bootcamp vs. domain expertise — no one gives you a straight answer on which path actually pays off.',
+          "4 years. Lakhs in fees. And not a single JD asks for what you studied. Everyone wants 'experience' but nobody explains how to get the first one.",
       },
       {
-        label: 'The Buzzword Trap',
+        label: 'Every Senior Gives You Different Advice',
         description:
-          "You've memorised the skills from job posts but can't tell which ones actually matter vs. which are just trending noise.",
+          'MBA vs. coding bootcamp vs. domain certification — your relatives, LinkedIn, and college seniors all say something different. The noise is deafening.',
       },
       {
-        label: 'The Invisible Roadmap',
+        label: "You Don't Know Which Skills Are Real vs. Buzzwords",
         description:
-          "No senior at your college went into this field. There's no template. You're building the plane while falling.",
+          "You've memorised the keywords from job posts. But you can't tell if 'GenAI' or 'product thinking' will actually land you a job or just waste 6 months.",
       },
     ],
   },
@@ -47,6 +49,8 @@ const PHASES = [
     colorRgb: '139, 92, 246',
     feature: 'Skill Gap Detection',
     featurePath: '/register',
+    forWho: 'Mid-level employees · People 2–5 years in · Professionals who feel invisible at work',
+    stake: 'The plateau is silent. You stop growing but you look busy. Years pass before you notice.',
     pains: [
       {
         label: 'The Promotion Wall',
@@ -80,6 +84,8 @@ const PHASES = [
     colorRgb: '245, 158, 11',
     feature: 'AI Career Advisor',
     featurePath: '/register',
+    forWho: 'Senior professionals · New managers · People who got promoted and now feel lost',
+    stake: 'You traded craft for meetings. Now neither feels like yours. This is the most identity-destroying phase.',
     pains: [
       {
         label: 'The IC vs. Manager Split',
@@ -113,6 +119,8 @@ const PHASES = [
     colorRgb: '239, 68, 68',
     feature: 'Resume Reframing + Analysis',
     featurePath: '/register',
+    forWho: 'Anyone who hates their field · Career changers · People whose "safe" choice turned out wrong',
+    stake: "The longer you stay, the harder it feels to leave. But every year you wait, the exit gets more expensive.",
     pains: [
       {
         label: 'The Sunk Cost Prison',
@@ -436,6 +444,25 @@ const PhaseJourney = () => {
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Who it's for + stake */}
+              <div
+                style={{
+                  padding: '0.85rem 2rem',
+                  background: `rgba(${phase.colorRgb}, 0.05)`,
+                  borderLeft: `4px solid ${phase.color}`,
+                }}
+              >
+                <p className="text-xs font-semibold mb-0.5" style={{ color: phase.color, opacity: 0.9 }}>
+                  Who this phase is for
+                </p>
+                <p className="text-xs mb-2" style={{ color: '#64748B' }}>
+                  {phase.forWho}
+                </p>
+                <p className="text-xs font-medium italic" style={{ color: '#475569' }}>
+                  "{phase.stake}"
+                </p>
               </div>
 
               {/* Separator */}
