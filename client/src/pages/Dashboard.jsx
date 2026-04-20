@@ -392,16 +392,19 @@ const Dashboard = () => {
           <>
             <StatCard
               icon="🛠️" label="Skills Listed" value={skillsCount}
+              accent="blue"
               trend={skillsCount > 0 ? 'up' : undefined}
               trendLabel={skillsCount > 0 ? `${skillsCount} skill${skillsCount !== 1 ? 's' : ''} added` : undefined}
             />
             <StatCard
               icon="💼" label="Experience Entries" value={expCount}
+              accent="violet"
               trend={expCount > 0 ? 'up' : undefined}
               trendLabel={expCount > 0 ? `${expCount} role${expCount !== 1 ? 's' : ''} added` : undefined}
             />
             <StatCard
               icon="✅" label="Profile Completion" value={`${completion}%`}
+              accent={completion >= 50 ? 'emerald' : 'amber'}
               trend={completion >= 50 ? 'up' : 'down'}
               trendLabel={completion === 100 ? 'Complete!' : `${100 - completion}% remaining`}
             />
