@@ -1,37 +1,29 @@
 import axios from 'axios';
+import { getLogoutFn } from '../context/AuthContext';
 
-// Create axios instance
 const api = axios.create({
   baseURL: '',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Request interceptor - Add token to every request
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+// Attach token to every request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
-// Response interceptor - Handle token expiration
+// On 401: call logout (clears all storage + React state) then redirect
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('token');
-      localStorage.removeItem('userEmail');
+      const logout = getLogoutFn();
+      if (logout) logout();
+      else {
+        // fallback if called before AuthProvider mounts
+        ['token', 'userEmail', 'userName'].forEach((k) => localStorage.removeItem(k));
+      }
       window.location.href = '/login';
     }
     return Promise.reject(error);
