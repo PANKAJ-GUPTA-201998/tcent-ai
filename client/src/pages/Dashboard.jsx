@@ -11,6 +11,7 @@ import api from '../utils/api';
 import StatCard from '../components/ui/StatCard';
 import Card from '../components/ui/Card';
 import Skeleton from '../components/ui/Skeleton';
+import OnboardingChecklist from '../components/ui/OnboardingChecklist';
 
 const PERSONALITY_API = '/api/personality';
 
@@ -331,6 +332,7 @@ const Dashboard = () => {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [assessmentCompleted, setAssessmentCompleted] = useState(null);
   const [selectedPhase, setSelectedPhase] = useState(0);
+  const [careerViewed, setCareerViewed] = useState(() => !!localStorage.getItem('careerViewed'));
 
   useEffect(() => {
     api.get('/api/profile')
@@ -406,6 +408,17 @@ const Dashboard = () => {
           </>
         )}
       </motion.div>
+
+      {/* Onboarding checklist — visible until all 4 steps done */}
+      {!loadingProfile && (
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={1.5}>
+          <OnboardingChecklist
+            hasResume={!!profile?.resumeUrl}
+            hasAssessment={assessmentCompleted === true}
+            hasCareerView={careerViewed}
+          />
+        </motion.div>
+      )}
 
       {/* ── Phase-based service navigator ── */}
       <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={2}>
