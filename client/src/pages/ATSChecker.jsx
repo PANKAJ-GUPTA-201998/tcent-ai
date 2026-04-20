@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, AlertCircle, CheckCircle } from 'lucide-react';
+import { Zap, AlertCircle, CheckCircle, ScanSearch } from 'lucide-react';
 import ResumeUpload from '../components/ats/ResumeUpload';
 import JobDescriptionInput from '../components/ats/JobDescriptionInput';
 import ATSResults from '../components/ats/ATSResults';
@@ -150,70 +150,93 @@ const ATSChecker = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Header */}
-      <motion.div
-        custom={0}
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        className="mb-8"
-      >
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-            <Zap size={20} className="text-white" />
+
+      {/* ── Header ── */}
+      <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible" className="mb-8">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'linear-gradient(135deg, #06B6D4, #6366F1)' }}>
+            <Zap size={22} className="text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            ATS Resume Matcher
-          </h1>
+          <div>
+            <h1 className="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">
+              ATS Resume Matcher
+            </h1>
+            <p className="text-gray-400 text-sm mt-0.5">
+              Paste a job description + upload your resume — get an instant ATS score with fixes.
+            </p>
+          </div>
         </div>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-          Upload your resume and paste a job description to get an instant ATS compatibility score with actionable improvements.
-        </p>
+
+        {/* Step indicators */}
+        <div className="flex items-center gap-2 mt-5">
+          {[
+            { n: '1', label: 'Upload resume', done: !!resumeFile },
+            { n: '2', label: 'Paste job description', done: jobDescription.trim().length >= 50 },
+            { n: '3', label: 'Get your score', done: false },
+          ].map((step, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                step.done
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+              }`}>
+                {step.done ? <CheckCircle size={14} className="text-white" /> : step.n}
+              </div>
+              <span className={`text-xs font-medium hidden sm:block ${step.done ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'}`}>
+                {step.label}
+              </span>
+              {i < 2 && <div className="w-6 h-px bg-gray-200 dark:bg-gray-700 mx-1" />}
+            </div>
+          ))}
+        </div>
       </motion.div>
 
-      {/* Split-screen input area */}
-      <motion.div
-        custom={1}
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-1 lg:grid-cols-2 gap-4"
-      >
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+      {/* ── Input cards ── */}
+      <motion.div custom={1} variants={fadeUp} initial="hidden" animate="visible"
+        className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className={`rounded-2xl border p-5 transition-all duration-200 ${
+          resumeFile
+            ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50'
+            : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800'
+        }`}>
           <ResumeUpload file={resumeFile} onChange={setResumeFile} />
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+        <div className={`rounded-2xl border p-5 transition-all duration-200 ${
+          jobDescription.trim().length >= 50
+            ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/50'
+            : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800'
+        }`}>
           <JobDescriptionInput value={jobDescription} onChange={setJobDescription} />
         </div>
       </motion.div>
 
-      {/* Analyze button */}
-      <motion.div
-        custom={2}
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        className="mt-5 flex flex-col items-center gap-3"
-      >
+      {/* ── Analyze button ── */}
+      <motion.div custom={2} variants={fadeUp} initial="hidden" animate="visible"
+        className="mt-5 flex flex-col items-center gap-2">
         <button
           onClick={handleAnalyze}
           disabled={!canAnalyze}
-          className={`flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-sm transition-all duration-200
-            ${canAnalyze
-              ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 shadow-md hover:shadow-lg active:scale-95'
-              : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-            }`}
+          className={`flex items-center gap-2.5 px-10 py-3.5 rounded-2xl font-bold text-sm transition-all duration-200 ${
+            canAnalyze
+              ? 'text-white active:scale-95 shadow-lg hover:shadow-xl'
+              : 'bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
+          }`}
+          style={canAnalyze ? {
+            background: 'linear-gradient(135deg, #06B6D4 0%, #6366F1 100%)',
+            boxShadow: '0 0 28px rgba(99,102,241,0.35)',
+          } : {}}
+          onMouseEnter={(e) => { if (canAnalyze) e.currentTarget.style.boxShadow = '0 0 44px rgba(99,102,241,0.55)'; }}
+          onMouseLeave={(e) => { if (canAnalyze) e.currentTarget.style.boxShadow = '0 0 28px rgba(99,102,241,0.35)'; }}
         >
           <Zap size={16} />
           Analyze ATS Match
         </button>
-
-        {!resumeFile && (
-          <p className="text-xs text-gray-400 dark:text-gray-500">Upload your resume PDF to get started</p>
-        )}
-        {resumeFile && jobDescription.trim().length < 50 && (
-          <p className="text-xs text-gray-400 dark:text-gray-500">Paste a job description (at least 50 characters)</p>
-        )}
+        <p className="text-xs text-gray-400 h-4">
+          {!resumeFile ? 'Upload your resume PDF to get started'
+            : jobDescription.trim().length < 50 ? 'Paste a job description (at least 50 characters)'
+            : 'Ready — click to analyze'}
+        </p>
       </motion.div>
 
       {/* Error */}
