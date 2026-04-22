@@ -1,784 +1,318 @@
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
-  ScanSearch, MessageCircle, Brain, Upload,
-  BarChart3, BookOpen, ArrowUpRight,
+  ArrowRight, CheckCircle, TrendingUp, Target, Zap, Brain,
+  ScanSearch, Upload, MessageCircle, BarChart3, BookOpen,
 } from 'lucide-react';
-import PhaseJourney from '../components/PhaseJourney';
 import StatsSection from '../components/home/StatsSection';
 import Testimonials from '../components/testimonials/Testimonials';
+import PricingSection from '../components/pricing/PricingSection';
 
-/* ─── Reusable animation ──────────────────────────────────── */
+/* ── Animation helpers ──────────────────────────────────────── */
 const fadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 36 },
+  initial: { opacity: 0, y: 32 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, amount: 0.25 },
-  transition: { duration: 0.65, delay, ease: [0.22, 1, 0.36, 1] },
+  transition: { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] },
 });
 
-/* ─── Reality stats ───────────────────────────────────────── */
-const STATS = [
-  {
-    number: '73%',
-    label: 'regret their stream choice within 2 years',
-    sub: 'but wait an average of 4 more years to act on it.',
-  },
-  {
-    number: '₹22L',
-    label: 'average salary lost by being in the wrong role',
-    sub: 'money you should already have. Every year you wait, it compounds.',
-  },
-  {
-    number: '4.3 yrs',
-    label: 'average time before professionals course-correct',
-    sub: 'that\'s 4.3 years of your 20s you can\'t get back.',
-  },
-];
-
-/* ─── How it works ────────────────────────────────────────── */
-const STEPS = [
-  {
-    number: '01',
-    title: 'Identify your phase',
-    description:
-      'Answer a few questions or upload your resume. We pinpoint exactly which career phase you\'re in and why you\'re stuck.',
-  },
-  {
-    number: '02',
-    title: 'See your blockers clearly',
-    description:
-      'We show you the exact reasons people in your phase fail to move forward — and which ones apply to you specifically.',
-  },
-  {
-    number: '03',
-    title: 'Get a personalised roadmap',
-    description:
-      'AI-generated steps, skill gaps, career path matches, and salary targets — specific to where you are and where you want to go.',
-  },
-];
-
-/* ─── Features (bento grid) ───────────────────────────────── */
-// large = spans 2 cols on desktop, featured = highlighted ring
-const FEATURES = [
-  {
-    icon: ScanSearch,
-    title: 'ATS Resume Checker',
-    description:
-      "Find out exactly why you're getting ghosted. Paste any job description, upload your resume — we score the match and tell you what to fix before you hit send.",
-    to: '/ats-checker',
-    color: '#06B6D4',
-    colorRgb: '6, 182, 212',
-    tag: 'Most used',
-    large: true,
-    stat: '3 in 4 resumes never reach a human. Yours might be one of them.',
-  },
-  {
-    icon: MessageCircle,
-    title: 'AI Career Advisor',
-    description:
-      'A career coach at 2 AM when anxiety peaks. Ask anything — switch or stay, which skills matter, how to negotiate. No generic advice.',
-    to: '/ai-advisor',
-    color: '#8B5CF6',
-    colorRgb: '139, 92, 246',
-    tag: 'Always on',
-    large: false,
-    stat: null,
-  },
-  {
-    icon: Upload,
-    title: 'AI Resume Analysis',
-    description:
-      'Upload once. Instantly see your skills, gaps, and best-fit paths — extracted by AI, not guesswork.',
-    to: '/upload-resume',
-    color: '#3B82F6',
-    colorRgb: '59, 130, 246',
-    tag: null,
-    large: false,
-    stat: null,
-  },
-  {
-    icon: Brain,
-    title: 'Career Path Matching',
-    description:
-      'Matched against 15+ paths with a percentage score. Stop guessing which direction to go.',
-    to: '/career',
-    color: '#10B981',
-    colorRgb: '16, 185, 129',
-    tag: null,
-    large: false,
-    stat: null,
-  },
-  {
-    icon: BookOpen,
-    title: 'Skill Gap Detection',
-    description:
-      'The 2–3 skills between you and a 40% salary jump. Not a list of 50 — the exact ones that matter.',
-    to: '/career',
-    color: '#F59E0B',
-    colorRgb: '245, 158, 11',
-    tag: null,
-    large: false,
-    stat: null,
-  },
-  {
-    icon: BarChart3,
-    title: 'Salary Intelligence',
-    description:
-      'Real Indian salary ranges per role, per city. Walk into every negotiation knowing your number.',
-    to: '/career',
-    color: '#EF4444',
-    colorRgb: '239, 68, 68',
-    tag: null,
-    large: false,
-    stat: null,
-  },
-];
-
-/* ─── Grain overlay component ─────────────────────────────── */
-const Grain = ({ opacity = 0.035 }) => (
-  <div
-    aria-hidden="true"
-    style={{
-      position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-      opacity,
-      backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.75\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")',
-      backgroundRepeat: 'repeat', backgroundSize: '180px',
-    }}
-  />
+/* ── Grain overlay ──────────────────────────────────────────── */
+const Grain = ({ opacity = 0.03 }) => (
+  <div aria-hidden="true" style={{
+    position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, opacity,
+    backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.75\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")',
+    backgroundRepeat: 'repeat', backgroundSize: '180px',
+  }} />
 );
 
-/* ─── Animated counter ────────────────────────────────────── */
-const Counter = ({ target, suffix = '', prefix = '' }) => {
-  const [val, setVal] = useState(0);
-  useEffect(() => {
-    let start = 0;
-    const end = parseFloat(target);
-    const duration = 1800;
-    const step = duration / 60;
-    const increment = end / (duration / step);
-    const timer = setInterval(() => {
-      start += increment;
-      if (start >= end) { setVal(end); clearInterval(timer); }
-      else setVal(start);
-    }, step);
-    return () => clearInterval(timer);
-  }, [target]);
-  const display = Number.isInteger(parseFloat(target))
-    ? Math.floor(val).toLocaleString('en-IN')
-    : val.toFixed(1);
-  return <>{prefix}{display}{suffix}</>;
-};
+const Divider = () => (
+  <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.05) 60%, transparent)' }} />
+);
+
+/* ── Services ───────────────────────────────────────────────── */
+const SERVICES = [
+  { icon: ScanSearch, title: 'ATS Resume Optimizer', desc: 'Find exactly why your resume gets rejected. Fix it before you hit send.', to: '/ats-checker', color: '#059669', colorRgb: '5,150,105', tag: 'Most used' },
+  { icon: MessageCircle, title: 'AI Career Advisor', desc: 'A strategic career coach at 2 AM. Switch companies, negotiate salary, plan your next move.', to: '/ai-advisor', color: '#8B5CF6', colorRgb: '139,92,246', tag: null },
+  { icon: Upload, title: 'AI Resume Analysis', desc: 'Upload once. Instantly surface skills, gaps, and highest-match roles.', to: '/upload-resume', color: '#3B82F6', colorRgb: '59,130,246', tag: null },
+  { icon: Brain, title: 'Career Path Matching', desc: 'Matched against 15+ senior paths with percentage fit scores.', to: '/career', color: '#F59E0B', colorRgb: '245,158,11', tag: null },
+  { icon: BookOpen, title: 'Skill Gap Detection', desc: 'The 2–3 skills between you and a 40%+ salary jump. Not a list of 50.', to: '/career', color: '#06B6D4', colorRgb: '6,182,212', tag: null },
+  { icon: BarChart3, title: 'Salary Intelligence', desc: 'Real Indian salary ranges per role, per city. Walk into every negotiation knowing your number.', to: '/career', color: '#EF4444', colorRgb: '239,68,68', tag: null },
+];
+
+/* ── How it works ───────────────────────────────────────────── */
+const HOW = [
+  { n: '01', title: 'Book Strategy Call', desc: 'A 30-minute deep dive into your current role, target, and salary gap. No generic advice.' },
+  { n: '02', title: 'Get Your Personalized Roadmap', desc: 'AI + human expertise combines to build a 90-day action plan specific to you.' },
+  { n: '03', title: 'Execute With Guidance', desc: 'Weekly check-ins, resume reviews, and mock negotiations — done with you, not just for you.' },
+  { n: '04', title: 'Land the Higher Role', desc: 'On average, professionals who complete the program see a 180% salary increase within 12 months.' },
+];
 
 /* ════════════════════════════════════════════════════════════ */
-const Landing = () => {
-  const [statsVisible, setStatsVisible] = useState(false);
+const Landing = () => (
+  <div style={{ background: '#0F172A', overflowX: 'hidden' }}>
 
-  return (
-    <div style={{ background: '#fff', overflowX: 'hidden' }}>
+    {/* ══ HERO ══════════════════════════════════════════════════ */}
+    <section style={{ position: 'relative', overflow: 'hidden', minHeight: '100vh', display: 'flex', alignItems: 'center' }}>
+      <Grain opacity={0.04} />
 
-      {/* ══ HERO ══════════════════════════════════════════════ */}
-      <section
-        style={{
-          background: 'linear-gradient(160deg, #050508 0%, #0A0A0F 55%, #0D0D1A 100%)',
-          minHeight: '100vh',
-          position: 'relative',
-          overflow: 'hidden',
-          display: 'flex',
-          alignItems: 'center',
-        }}
-      >
-        <Grain opacity={0.04} />
+      {/* Radial glows */}
+      {[
+        { top: '-15%', left: '50%', w: '900px', h: '600px', color: 'rgba(5,150,105,0.10)' },
+        { bottom: '0', right: '-10%', w: '600px', h: '500px', color: 'rgba(139,92,246,0.07)' },
+      ].map((g, i) => (
+        <div key={i} aria-hidden="true" style={{
+          position: 'absolute', ...g, width: g.w, height: g.h,
+          background: `radial-gradient(ellipse, ${g.color} 0%, transparent 70%)`,
+          transform: g.left ? 'translateX(-50%)' : undefined,
+          pointerEvents: 'none', zIndex: 0,
+        }} />
+      ))}
 
-        {/* Radial glow — top center */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute', top: '-20%', left: '50%',
-            transform: 'translateX(-50%)',
-            width: '900px', height: '600px',
-            background: 'radial-gradient(ellipse, rgba(59,130,246,0.12) 0%, transparent 70%)',
-            pointerEvents: 'none', zIndex: 0,
-          }}
-        />
-        {/* Radial glow — bottom right */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute', bottom: '-10%', right: '-10%',
-            width: '600px', height: '400px',
-            background: 'radial-gradient(ellipse, rgba(139,92,246,0.08) 0%, transparent 70%)',
-            pointerEvents: 'none', zIndex: 0,
-          }}
-        />
-        {/* Subtle dot grid */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
-            backgroundImage: 'radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)',
-            backgroundSize: '32px 32px',
-          }}
-        />
+      {/* Dot grid */}
+      <div aria-hidden="true" style={{
+        position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
+        backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)',
+        backgroundSize: '32px 32px',
+      }} />
 
-        <div className="relative z-10 max-w-5xl mx-auto px-6 py-28 text-center w-full">
+      <div className="relative z-10 max-w-5xl mx-auto px-6 py-28 text-center w-full">
 
-          {/* Badge */}
-          <motion.div {...fadeUp(0)} className="mb-8">
-            <span
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase"
-              style={{
-                background: 'rgba(59,130,246,0.1)',
-                border: '1px solid rgba(59,130,246,0.25)',
-                color: '#60A5FA',
-              }}
-            >
-              <span
-                style={{
-                  width: 6, height: 6, borderRadius: '50%',
-                  background: '#3B82F6',
-                  boxShadow: '0 0 6px #3B82F6',
-                  display: 'inline-block',
-                  animation: 'pulse 2s infinite',
-                }}
-              />
-              AI-Powered Career Guidance for India
+        {/* Badge */}
+        <motion.div {...fadeUp(0)} className="mb-8">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase"
+            style={{ background: 'rgba(5,150,105,0.12)', border: '1px solid rgba(5,150,105,0.3)', color: '#34D399' }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10B981', boxShadow: '0 0 8px #10B981', display: 'inline-block', animation: 'pulse 2s infinite' }} />
+            AI-Powered Career Growth · India's #1 Platform
+          </span>
+        </motion.div>
+
+        {/* H1 */}
+        <motion.h1 {...fadeUp(0.07)}
+          style={{ lineHeight: 1.05, letterSpacing: '-0.035em' }}
+          className="text-5xl sm:text-6xl md:text-7xl font-black text-white mb-6">
+          Double Your Salary
+          <br />
+          <span style={{
+            background: 'linear-gradient(135deg, #34D399 0%, #059669 50%, #F59E0B 100%)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+          }}>
+            in 12 Months.
+          </span>
+        </motion.h1>
+
+        {/* Sub */}
+        <motion.p {...fadeUp(0.14)}
+          className="text-lg sm:text-xl max-w-2xl mx-auto mb-4 leading-relaxed"
+          style={{ color: '#94A3B8' }}>
+          AI-powered career growth for ambitious professionals earning{' '}
+          <span style={{ color: '#CBD5E1', fontWeight: 600 }}>₹5L–₹50L</span>{' '}
+          who are ready to break through to the next level.
+        </motion.p>
+        <motion.p {...fadeUp(0.18)}
+          className="text-sm max-w-xl mx-auto mb-10"
+          style={{ color: '#475569' }}>
+          Stop guessing. Stop taking bad advice from LinkedIn. Get a precise, personalized roadmap
+          built by AI and reviewed by senior professionals who've made the exact jump you're targeting.
+        </motion.p>
+
+        {/* CTAs */}
+        <motion.div {...fadeUp(0.24)} className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
+          <Link to="/register"
+            className="px-9 py-4 font-black text-white rounded-2xl text-base transition-all active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #059669, #047857)', boxShadow: '0 0 40px rgba(5,150,105,0.4)' }}
+            onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 0 60px rgba(5,150,105,0.6)'; }}
+            onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 0 40px rgba(5,150,105,0.4)'; }}>
+            Book Strategy Call — ₹1,999 <ArrowRight size={16} className="inline ml-1" />
+          </Link>
+          <a href="#services"
+            className="px-9 py-4 font-semibold rounded-2xl text-base transition-all active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#94A3B8' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}>
+            See how it works
+          </a>
+        </motion.div>
+
+        {/* Trust strip */}
+        <motion.div {...fadeUp(0.3)} className="flex flex-wrap items-center justify-center gap-6 text-xs" style={{ color: '#334155' }}>
+          {['450+ professionals transformed', '₹2.4Cr+ salary increments unlocked', 'Average 180% salary growth'].map(t => (
+            <span key={t} className="flex items-center gap-1.5">
+              <CheckCircle size={12} style={{ color: '#059669' }} />
+              <span style={{ color: '#475569' }}>{t}</span>
             </span>
-          </motion.div>
-
-          {/* H1 */}
-          <motion.h1
-            {...fadeUp(0.08)}
-            style={{ lineHeight: 1.05, letterSpacing: '-0.03em' }}
-            className="text-5xl sm:text-6xl md:text-7xl font-black text-white mb-6"
-          >
-            Your career is either
-            <br />
-            <span
-              style={{
-                background: 'linear-gradient(135deg, #60A5FA 0%, #A78BFA 50%, #F472B6 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              moving forward. Or it isn't.
-            </span>
-          </motion.h1>
-
-          {/* Subtext */}
-          <motion.p
-            {...fadeUp(0.16)}
-            className="text-lg sm:text-xl max-w-2xl mx-auto mb-4 leading-relaxed"
-            style={{ color: '#94A3B8' }}
-          >
-            Most Indian professionals spend years in the wrong phase —{' '}
-            <span style={{ color: '#CBD5E1', fontWeight: 600 }}>not because they lack talent,
-            but because nobody mapped the terrain for them.</span>
-          </motion.p>
-          <motion.p
-            {...fadeUp(0.2)}
-            className="text-base max-w-xl mx-auto mb-10"
-            style={{ color: '#475569' }}
-          >
-            Tcent.AI identifies your exact phase, surfaces your real blockers, and gives you
-            a precise roadmap to the career — and the salary — you should already have.
-          </motion.p>
-
-          {/* CTAs */}
-          <motion.div {...fadeUp(0.26)} className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
-            <Link
-              to="/register"
-              className="px-9 py-4 font-bold text-white rounded-2xl text-base transition-all active:scale-95"
-              style={{
-                background: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
-                boxShadow: '0 0 40px rgba(59,130,246,0.3)',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 0 60px rgba(59,130,246,0.45)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 0 40px rgba(59,130,246,0.3)'; }}
-            >
-              Find My Career Phase — Free
-            </Link>
-            <a
-              href="#phases"
-              className="px-9 py-4 font-semibold rounded-2xl text-base transition-all active:scale-95"
-              style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                color: '#94A3B8',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
-            >
-              See the 4 phases
-            </a>
-          </motion.div>
-
-          {/* Trust strip */}
-          <motion.div
-            {...fadeUp(0.32)}
-            className="flex flex-wrap items-center justify-center gap-6 text-xs"
-            style={{ color: '#334155' }}
-          >
-            {['1,000+ professionals guided', 'No credit card required', 'Results in 30 seconds'].map((t) => (
-              <span key={t} className="flex items-center gap-1.5">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <circle cx="6" cy="6" r="5.5" stroke="rgba(59,130,246,0.4)" />
-                  <path d="M3.5 6L5.5 8L8.5 4" stroke="#3B82F6" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                {t}
-              </span>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ══ REALITY CHECK ═════════════════════════════════════ */}
-      <section
-        style={{ background: '#0A0A0F', position: 'relative', overflow: 'hidden' }}
-      >
-        <Grain opacity={0.04} />
-        {/* Horizontal glow line at top */}
-        <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, rgba(59,130,246,0.3) 40%, rgba(139,92,246,0.3) 60%, transparent)' }} />
-
-        <div className="relative z-10 max-w-5xl mx-auto px-6 py-24">
-          <motion.div {...fadeUp(0)} className="text-center mb-16">
-            <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: '#475569' }}>
-              The data nobody shows you
-            </p>
-            <h2
-              className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4"
-              style={{ color: '#F1F5F9', lineHeight: 1.1, letterSpacing: '-0.02em' }}
-            >
-              The cost of staying stuck
-              <br />
-              <span style={{ color: '#EF4444' }}>is not zero.</span>
-            </h2>
-            <p className="text-base max-w-lg mx-auto" style={{ color: '#475569' }}>
-              Every month in the wrong phase has a price. Here's what the data actually says.
-            </p>
-          </motion.div>
-
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-3 gap-px"
-            style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '1.5rem', overflow: 'hidden' }}
-            initial={{ opacity: 0, y: 32 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.6 }}
-            onViewportEnter={() => setStatsVisible(true)}
-          >
-            {STATS.map((stat, i) => (
-              <div
-                key={stat.number}
-                style={{ background: '#0F0F17', padding: '2.5rem 2rem' }}
-              >
-                <div
-                  className="text-4xl sm:text-5xl font-black mb-3"
-                  style={{ color: i === 1 ? '#EF4444' : i === 0 ? '#F59E0B' : '#8B5CF6', letterSpacing: '-0.02em' }}
-                >
-                  {stat.number}
-                </div>
-                <p className="text-sm font-semibold mb-2" style={{ color: '#CBD5E1' }}>
-                  {stat.label}
-                </p>
-                <p className="text-xs leading-relaxed" style={{ color: '#475569' }}>
-                  {stat.sub}
-                </p>
-              </div>
-            ))}
-          </motion.div>
-
-          {/* Fear line */}
-          <motion.p
-            {...fadeUp(0.1)}
-            className="text-center text-sm mt-10"
-            style={{ color: '#334155' }}
-          >
-            The worst part?{' '}
-            <span style={{ color: '#64748B' }}>
-              Most people know something is wrong. They just don't know what to do about it.
-            </span>
-            <br />
-            <span style={{ color: '#3B82F6', fontWeight: 600 }}>
-              That's exactly what Tcent.AI is built for.
-            </span>
-          </motion.p>
-        </div>
-
-        <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.05) 60%, transparent)' }} />
-      </section>
-
-      {/* ══ PHASE JOURNEY ═════════════════════════════════════ */}
-      <div id="phases">
-        <PhaseJourney />
+          ))}
+        </motion.div>
       </div>
+    </section>
 
-      {/* ══ HOW IT WORKS ══════════════════════════════════════ */}
-      <section style={{ background: '#FAFAFA', position: 'relative' }}>
-        <div className="max-w-4xl mx-auto px-6 py-24">
-          <motion.div {...fadeUp(0)} className="text-center mb-16">
-            <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: '#9CA3AF' }}>
-              How it works
-            </p>
-            <h2
-              className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4"
-              style={{ letterSpacing: '-0.02em' }}
-            >
-              From confused to clear
+    {/* ══ STATS ═══════════════════════════════════════════════ */}
+    <StatsSection />
+
+    {/* ══ SERVICES ════════════════════════════════════════════ */}
+    <section id="services" style={{ background: '#0F172A', position: 'relative', overflow: 'hidden' }}>
+      <Grain opacity={0.03} />
+      <Divider />
+      <div className="relative z-10 max-w-6xl mx-auto px-6 py-24">
+
+        <motion.div {...fadeUp(0)} className="mb-14">
+          <p className="text-xs font-bold tracking-widest uppercase mb-4" style={{ color: '#334155' }}>
+            The full toolkit
+          </p>
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold" style={{ color: '#F1F5F9', letterSpacing: '-0.025em', lineHeight: 1.1 }}>
+              Six tools.
               <br />
-              <span
-                style={{
-                  background: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                in three steps.
+              <span style={{ background: 'linear-gradient(135deg, #34D399, #059669)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                One clear direction.
               </span>
             </h2>
-            <p className="text-gray-500 text-base max-w-md mx-auto">
-              No lengthy onboarding. No waiting for a coach's calendar. Just answers.
+            <p className="text-sm max-w-xs text-right hidden sm:block" style={{ color: '#475569' }}>
+              Each tool is built for a specific career blocker experienced professionals face.
             </p>
-          </motion.div>
+          </div>
+        </motion.div>
 
-          <div className="space-y-4">
-            {STEPS.map((step, i) => (
-              <motion.div
-                key={step.number}
-                {...fadeUp(i * 0.1)}
-                className="flex items-start gap-6 rounded-2xl p-7"
-                style={{
-                  background: '#fff',
-                  border: '1px solid #F1F5F9',
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-                }}
-              >
-                <span
-                  className="font-black text-4xl leading-none select-none flex-shrink-0"
-                  style={{
-                    background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
+        <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          {SERVICES.map((s, i) => {
+            const Icon = s.icon;
+            const isLarge = i === 0;
+            return (
+              <motion.div key={s.title} {...fadeUp(i * 0.07)} style={{ gridColumn: isLarge ? 'span 2' : 'span 1' }}>
+                <Link to={s.to}
+                  className="group flex flex-col h-full rounded-2xl p-6 transition-all duration-300 relative overflow-hidden"
+                  style={{ background: '#1E293B', border: `1px solid rgba(${s.colorRgb},0.15)`, minHeight: isLarge ? '220px' : '180px' }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = `rgba(${s.colorRgb},0.08)`;
+                    e.currentTarget.style.borderColor = `rgba(${s.colorRgb},0.4)`;
+                    e.currentTarget.style.boxShadow = `0 0 40px rgba(${s.colorRgb},0.12)`;
+                    e.currentTarget.style.transform = 'translateY(-3px)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = '#1E293B';
+                    e.currentTarget.style.borderColor = `rgba(${s.colorRgb},0.15)`;
+                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.transform = 'none';
                   }}
                 >
-                  {step.number}
-                </span>
+                  <div aria-hidden="true" style={{ position: 'absolute', top: 0, right: 0, width: '180px', height: '180px', background: `radial-gradient(circle, rgba(${s.colorRgb},0.07) 0%, transparent 70%)`, pointerEvents: 'none' }} />
+                  <div className="flex items-start justify-between mb-auto">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `rgba(${s.colorRgb},0.15)` }}>
+                      <Icon size={18} style={{ color: s.color }} />
+                    </div>
+                    {s.tag && (
+                      <span className="text-xs font-bold px-2.5 py-0.5 rounded-full" style={{ background: `rgba(${s.colorRgb},0.15)`, color: s.color, border: `1px solid rgba(${s.colorRgb},0.3)` }}>
+                        {s.tag}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-5">
+                    <h3 className="font-bold mb-2 text-slate-200" style={{ fontSize: isLarge ? '1.15rem' : '0.95rem' }}>{s.title}</h3>
+                    <p className="leading-relaxed text-slate-500" style={{ fontSize: isLarge ? '0.88rem' : '0.8rem' }}>{s.desc}</p>
+                  </div>
+                  <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold opacity-0 group-hover:opacity-100 transition-all" style={{ color: s.color }}>
+                    Try it <ArrowRight size={12} />
+                  </div>
+                </Link>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+      <Divider />
+    </section>
+
+    {/* ══ HOW IT WORKS ════════════════════════════════════════ */}
+    <section style={{ background: '#1E293B', position: 'relative' }}>
+      <div className="max-w-4xl mx-auto px-6 py-24">
+        <motion.div {...fadeUp(0)} className="text-center mb-16">
+          <p className="text-xs font-bold tracking-widest uppercase mb-4" style={{ color: '#334155' }}>The process</p>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-3" style={{ letterSpacing: '-0.02em' }}>
+            From stuck to promoted
+            <br />
+            <span style={{ background: 'linear-gradient(135deg, #34D399, #059669)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              in four steps.
+            </span>
+          </h2>
+          <p className="text-slate-500 text-base max-w-md mx-auto">No lengthy onboarding. No waiting for a coach's calendar.</p>
+        </motion.div>
+
+        <div className="relative">
+          {/* Vertical emerald line */}
+          <div className="absolute left-[28px] top-8 bottom-8 w-px hidden sm:block" style={{ background: 'linear-gradient(to bottom, transparent, #059669 20%, #059669 80%, transparent)' }} />
+
+          <div className="space-y-6">
+            {HOW.map((step, i) => (
+              <motion.div key={step.n} {...fadeUp(i * 0.1)}
+                className="flex items-start gap-5 rounded-2xl p-6"
+                style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 font-black text-xl"
+                  style={{ background: 'rgba(5,150,105,0.12)', color: '#34D399', border: '1px solid rgba(5,150,105,0.2)' }}>
+                  {step.n}
+                </div>
                 <div>
-                  <h3 className="text-base font-bold text-gray-900 mb-1">{step.title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">{step.description}</p>
+                  <h3 className="text-base font-bold text-white mb-1">{step.title}</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed">{step.desc}</p>
                 </div>
               </motion.div>
             ))}
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      {/* ══ STATS ═════════════════════════════════════════════ */}
-      <StatsSection />
-
-      {/* ══ FEATURES BENTO ════════════════════════════════════ */}
-      <section
-        id="features"
-        style={{ background: '#050508', position: 'relative', overflow: 'hidden' }}
-      >
-        <Grain opacity={0.04} />
-        <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.05) 60%, transparent)' }} />
-
-        <div className="relative z-10 max-w-6xl mx-auto px-6 py-24">
-          {/* Header */}
-          <motion.div {...fadeUp(0)} className="mb-14">
-            <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: '#334155' }}>
-              The full toolkit
-            </p>
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-              <h2
-                className="text-3xl sm:text-4xl md:text-5xl font-extrabold"
-                style={{
-                  color: '#F1F5F9',
-                  letterSpacing: '-0.025em',
-                  lineHeight: 1.1,
-                }}
-              >
-                Six tools.
-                <br />
-                <span style={{
-                  background: 'linear-gradient(135deg, #60A5FA 0%, #A78BFA 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}>
-                  One clear direction.
-                </span>
-              </h2>
-              <p className="text-sm max-w-xs text-right" style={{ color: '#475569' }}>
-                Click any tool to try it — each one is built for a specific career blocker.
-              </p>
-            </div>
-          </motion.div>
-
-          {/* Bento grid */}
-          <div
-            className="grid gap-3"
-            style={{ gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'auto' }}
-          >
-            {FEATURES.map((f, i) => {
-              const Icon = f.icon;
-              const isLarge = f.large;
-              return (
-                <motion.div
-                  key={f.title}
-                  {...fadeUp(i * 0.07)}
-                  style={{
-                    gridColumn: isLarge ? 'span 2' : 'span 1',
-                  }}
-                  className="sm:col-auto"
-                >
-                  <Link
-                    to={f.to}
-                    className="group flex flex-col h-full rounded-2xl p-6 transition-all duration-300 relative overflow-hidden"
-                    style={{
-                      background: '#0D0D18',
-                      border: `1px solid rgba(${f.colorRgb}, 0.15)`,
-                      minHeight: isLarge ? '220px' : '180px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = `rgba(${f.colorRgb}, 0.07)`;
-                      e.currentTarget.style.borderColor = `rgba(${f.colorRgb}, 0.45)`;
-                      e.currentTarget.style.boxShadow = `0 0 40px rgba(${f.colorRgb}, 0.1)`;
-                      e.currentTarget.style.transform = 'translateY(-3px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#0D0D18';
-                      e.currentTarget.style.borderColor = `rgba(${f.colorRgb}, 0.15)`;
-                      e.currentTarget.style.boxShadow = 'none';
-                      e.currentTarget.style.transform = 'none';
-                    }}
-                  >
-                    {/* Subtle radial glow inside card */}
-                    <div
-                      aria-hidden="true"
-                      style={{
-                        position: 'absolute', top: 0, right: 0,
-                        width: '180px', height: '180px',
-                        background: `radial-gradient(circle, rgba(${f.colorRgb}, 0.08) 0%, transparent 70%)`,
-                        pointerEvents: 'none',
-                      }}
-                    />
-
-                    {/* Top row */}
-                    <div className="flex items-start justify-between mb-auto">
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{ background: `rgba(${f.colorRgb}, 0.15)` }}
-                      >
-                        <Icon size={18} style={{ color: f.color }} />
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {f.tag && (
-                          <span
-                            className="text-xs font-semibold px-2.5 py-0.5 rounded-full"
-                            style={{
-                              background: `rgba(${f.colorRgb}, 0.15)`,
-                              color: f.color,
-                              border: `1px solid rgba(${f.colorRgb}, 0.3)`,
-                            }}
-                          >
-                            {f.tag}
-                          </span>
-                        )}
-                        <div
-                          className="w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                          style={{ background: `rgba(${f.colorRgb}, 0.2)` }}
-                        >
-                          <ArrowUpRight size={13} style={{ color: f.color }} />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="mt-5">
-                      <h3
-                        className="font-bold mb-2 transition-colors duration-200"
-                        style={{
-                          color: '#E2E8F0',
-                          fontSize: isLarge ? '1.2rem' : '0.95rem',
-                        }}
-                      >
-                        {f.title}
-                      </h3>
-                      <p
-                        className="leading-relaxed"
-                        style={{
-                          color: '#475569',
-                          fontSize: isLarge ? '0.9rem' : '0.8rem',
-                        }}
-                      >
-                        {f.description}
-                      </p>
-
-                      {/* Large card stat callout */}
-                      {isLarge && f.stat && (
-                        <div
-                          className="mt-5 rounded-xl px-4 py-3 flex items-start gap-3"
-                          style={{
-                            background: `rgba(${f.colorRgb}, 0.08)`,
-                            border: `1px solid rgba(${f.colorRgb}, 0.2)`,
-                          }}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 flex-shrink-0">
-                            <circle cx="8" cy="8" r="7.5" stroke={f.color} strokeOpacity="0.5" />
-                            <path d="M8 5V8.5" stroke={f.color} strokeWidth="1.5" strokeLinecap="round" />
-                            <circle cx="8" cy="11" r="0.75" fill={f.color} />
-                          </svg>
-                          <p className="text-xs leading-relaxed" style={{ color: '#64748B' }}>
-                            {f.stat}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Bottom link label */}
-                    <div
-                      className="mt-4 flex items-center gap-1.5 text-xs font-semibold opacity-0 group-hover:opacity-100 transition-all duration-200"
-                      style={{ color: f.color }}
-                    >
-                      Try it free
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M2.5 6H9.5M9.5 6L7 3.5M9.5 6L7 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                  </Link>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.05) 60%, transparent)' }} />
-      </section>
-
-      {/* ══ TESTIMONIALS ══════════════════════════════════════ */}
+    {/* ══ TESTIMONIALS ════════════════════════════════════════ */}
+    <div id="testimonials">
       <Testimonials />
-
-      {/* ══ FEAR CLOSER ═══════════════════════════════════════ */}
-      <section
-        style={{
-          background: 'linear-gradient(160deg, #050508 0%, #0A0A0F 100%)',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <Grain opacity={0.04} />
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute', top: '50%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '800px', height: '400px',
-            background: 'radial-gradient(ellipse, rgba(139,92,246,0.1) 0%, transparent 70%)',
-            pointerEvents: 'none', zIndex: 0,
-          }}
-        />
-
-        <div className="relative z-10 max-w-3xl mx-auto px-6 py-28 text-center">
-          <motion.p
-            {...fadeUp(0)}
-            className="text-xs font-semibold tracking-widest uppercase mb-6"
-            style={{ color: '#475569' }}
-          >
-            The uncomfortable truth
-          </motion.p>
-
-          <motion.h2
-            {...fadeUp(0.06)}
-            className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-6"
-            style={{ lineHeight: 1.1, letterSpacing: '-0.025em' }}
-          >
-            Doing nothing{' '}
-            <span style={{ color: '#EF4444' }}>is a choice.</span>
-            <br />
-            <span style={{ color: '#94A3B8' }}>It's just a very expensive one.</span>
-          </motion.h2>
-
-          <motion.p
-            {...fadeUp(0.12)}
-            className="text-base leading-relaxed mb-4"
-            style={{ color: '#64748B' }}
-          >
-            Your batchmates who are ahead of you aren't smarter.
-            They aren't working harder. They just figured out their phase earlier
-            — and moved with clarity while you were still guessing.
-          </motion.p>
-
-          <motion.p
-            {...fadeUp(0.16)}
-            className="text-base mb-12"
-            style={{ color: '#475569' }}
-          >
-            <span style={{ color: '#94A3B8' }}>The gap isn't talent. It's information.</span>
-            {' '}Tcent.AI gives you that information — in 30 seconds.
-          </motion.p>
-
-          <motion.div {...fadeUp(0.22)} className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/register"
-              className="px-10 py-4 font-bold text-white rounded-2xl text-base transition-all active:scale-95"
-              style={{
-                background: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
-                boxShadow: '0 0 50px rgba(59,130,246,0.3)',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 0 70px rgba(59,130,246,0.5)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 0 50px rgba(59,130,246,0.3)'; }}
-            >
-              Stop guessing. Start knowing.
-            </Link>
-            <Link
-              to="/login"
-              className="px-10 py-4 font-semibold rounded-2xl text-base transition-all active:scale-95"
-              style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                color: '#64748B',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#94A3B8'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#64748B'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
-            >
-              Already have an account
-            </Link>
-          </motion.div>
-
-          <motion.p
-            {...fadeUp(0.28)}
-            className="mt-8 text-xs"
-            style={{ color: '#1E293B' }}
-          >
-            Free forever · No credit card · Takes 30 seconds
-          </motion.p>
-        </div>
-      </section>
-
-      {/* ══ FOOTER ════════════════════════════════════════════ */}
-      <footer style={{ background: '#050508', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-        <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-sm font-bold" style={{ color: '#1E293B' }}>Tcent.AI</span>
-          <span className="text-xs" style={{ color: '#0F172A' }}>
-            © {new Date().getFullYear()} Tcent.AI · AI-powered career intelligence for India
-          </span>
-          <div className="flex items-center gap-6 text-xs" style={{ color: '#1E293B' }}>
-            <Link to="/login" style={{ color: '#1E293B' }} className="hover:text-slate-400 transition">Login</Link>
-            <Link to="/register" style={{ color: '#3B82F6' }} className="hover:opacity-80 transition font-semibold">Get Started</Link>
-          </div>
-        </div>
-      </footer>
-
     </div>
-  );
-};
+
+    {/* ══ PRICING ═════════════════════════════════════════════ */}
+    <div id="pricing">
+      <PricingSection />
+    </div>
+
+    {/* ══ FINAL CTA ═══════════════════════════════════════════ */}
+    <section style={{ background: 'linear-gradient(160deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)', position: 'relative', overflow: 'hidden' }}>
+      <Grain opacity={0.04} />
+      <div aria-hidden="true" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '700px', height: '400px', background: 'radial-gradient(ellipse, rgba(5,150,105,0.1) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+
+      <div className="relative z-10 max-w-3xl mx-auto px-6 py-28 text-center">
+        <motion.p {...fadeUp(0)} className="text-xs font-bold tracking-widest uppercase mb-6" style={{ color: '#475569' }}>
+          The uncomfortable truth
+        </motion.p>
+        <motion.h2 {...fadeUp(0.06)} className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-6" style={{ lineHeight: 1.1, letterSpacing: '-0.025em' }}>
+          Every month you wait
+          <br />
+          <span style={{ color: '#EF4444' }}>costs you ₹1–4 lakhs.</span>
+        </motion.h2>
+        <motion.p {...fadeUp(0.12)} className="text-base leading-relaxed mb-10" style={{ color: '#64748B' }}>
+          The professionals ahead of you aren't smarter. They got a precise roadmap earlier.
+          The gap isn't talent. It's information and strategy.
+          <br /><br />
+          <span style={{ color: '#94A3B8' }}>Tcent.AI gives you both — in your first session.</span>
+        </motion.p>
+        <motion.div {...fadeUp(0.18)} className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link to="/register"
+            className="px-10 py-4 font-black text-white rounded-2xl text-base transition-all active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #059669, #047857)', boxShadow: '0 0 50px rgba(5,150,105,0.4)' }}
+            onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 0 70px rgba(5,150,105,0.6)'; }}
+            onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 0 50px rgba(5,150,105,0.4)'; }}>
+            Book Your Strategy Call — ₹1,999
+          </Link>
+          <Link to="/login"
+            className="px-10 py-4 font-semibold rounded-2xl text-base transition-all active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#64748B' }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#94A3B8'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#64748B'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}>
+            Already a member
+          </Link>
+        </motion.div>
+        <motion.p {...fadeUp(0.24)} className="mt-6 text-xs" style={{ color: '#1E293B' }}>
+          30-min strategy call · Money-back guarantee · Results or refund
+        </motion.p>
+      </div>
+    </section>
+
+  </div>
+);
 
 export default Landing;

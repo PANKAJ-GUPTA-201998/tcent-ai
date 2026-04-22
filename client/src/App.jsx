@@ -162,7 +162,7 @@ function App() {
       <ThemeProvider>
         <ToastProvider>
         <AuthProvider>
-          <div className="min-h-screen flex flex-col bg-white dark:bg-slate-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+          <div className="min-h-screen flex flex-col" style={{ background: '#0F172A', color: '#F1F5F9' }}>
             <Navbar />
             <main className="flex-1">
               <AnimatedRoutes />

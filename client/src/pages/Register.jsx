@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
 
 const inputCls =
-  'w-full px-4 py-3 text-sm border border-gray-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition';
+  'w-full px-4 py-3 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600 transition';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -52,12 +52,12 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-teal-100 dark:from-slate-900 dark:to-slate-800 px-4">
-      <div className="max-w-md w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-2xl shadow-lg p-8">
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#0F172A' }}>
+      <div className="max-w-md w-full rounded-2xl p-8" style={{ background: '#1E293B', border: '1px solid rgba(255,255,255,0.06)' }}>
 
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">Create Account</h1>
-          <p className="text-gray-500 dark:text-slate-400 text-sm">Join Tcent.AI today</p>
+          <h1 className="text-3xl font-black text-white mb-2">Start Growing</h1>
+          <p className="text-sm" style={{ color: '#64748B' }}>Join 450+ professionals on Tcent.AI</p>
         </div>
 
         {error && (
@@ -115,10 +115,10 @@ const Register = () => {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 dark:text-slate-400 mt-6">
+        <p className="text-center text-sm mt-6" style={{ color: '#475569' }}>
           Already have an account?{' '}
-          <Link to="/login" className="text-blue-600 dark:text-blue-400 font-medium hover:underline transition-colors">
-            Login
+          <Link to="/login" className="font-semibold hover:underline transition-colors" style={{ color: '#34D399' }}>
+            Sign in
           </Link>
         </p>
       </div>

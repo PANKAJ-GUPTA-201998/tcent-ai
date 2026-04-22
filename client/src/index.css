@@ -2,69 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Base ───────────────────────────────────────────────────── */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+/* ── Base ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  @apply bg-[#F8F9FC] text-gray-900;
+  background-color: #0F172A;
+  color: #F1F5F9;
 }
 
-.dark body {
-  @apply bg-[#08090E] text-gray-100;
-}
-
-/* ── Scrollbar ──────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { @apply bg-gray-300 dark:bg-gray-700 rounded-full; }
-::-webkit-scrollbar-thumb:hover { @apply bg-gray-400 dark:bg-gray-600; }
+::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #334155; }
 
-/* ── Text selection ─────────────────────────────────────────── */
-::selection {
-  background: rgba(59, 130, 246, 0.2);
-  color: inherit;
+/* ── Selection ─────────────────────────────────────────────── */
+::selection { background: rgba(5,150,105,0.25); color: inherit; }
+
+/* ── Focus ─────────────────────────────────────────────────── */
+:focus-visible { outline: 2px solid #059669; outline-offset: 2px; border-radius: 6px; }
+
+/* ── Transitions ───────────────────────────────────────────── */
+a, button {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+  transition-duration: 150ms;
 }
 
-/* ── Focus rings ────────────────────────────────────────────── */
-:focus-visible {
-  outline: 2px solid #3B82F6;
-  outline-offset: 2px;
-  border-radius: 6px;
-}
-
-/* ── Smooth transitions ─────────────────────────────────────── */
-a, button { transition-property: color, background-color, border-color, box-shadow, opacity, transform; transition-duration: 150ms; }
-
-/* ── Gradient text utility ──────────────────────────────────── */
+/* ── Gradient text ─────────────────────────────────────────── */
 .gradient-text {
-  background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+  background: linear-gradient(135deg, #34D399 0%, #059669 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.gold-text {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* ── Glow button utility ────────────────────────────────────── */
-.btn-glow {
-  box-shadow: 0 0 24px rgba(59, 130, 246, 0.35);
+/* ── Emerald glow button ───────────────────────────────────── */
+.btn-emerald {
+  background: linear-gradient(135deg, #059669, #047857);
+  box-shadow: 0 0 24px rgba(5,150,105,0.35);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  padding: 0.75rem 2rem;
+  transition: box-shadow 150ms;
 }
-.btn-glow:hover {
-  box-shadow: 0 0 36px rgba(59, 130, 246, 0.5);
-}
+.btn-emerald:hover { box-shadow: 0 0 40px rgba(5,150,105,0.55); }
 
-/* ── Card glass effect ──────────────────────────────────────── */
-.glass {
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-/* ── Animated pulse dot ─────────────────────────────────────── */
+/* ── Animated pulse dot ────────────────────────────────────── */
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(0.85); }
+  50%       { opacity: 0.5; transform: scale(0.85); }
 }
 .pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+
+/* ── Section divider line ──────────────────────────────────── */
+.divider-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.05) 60%, transparent);
+}
