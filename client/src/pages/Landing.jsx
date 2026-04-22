@@ -6,6 +6,8 @@ import {
   BarChart3, BookOpen, ArrowUpRight,
 } from 'lucide-react';
 import PhaseJourney from '../components/PhaseJourney';
+import StatsSection from '../components/home/StatsSection';
+import Testimonials from '../components/testimonials/Testimonials';
 
 /* ─── Reusable animation ──────────────────────────────────── */
 const fadeUp = (delay = 0) => ({
@@ -474,6 +476,9 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* ══ STATS ═════════════════════════════════════════════ */}
+      <StatsSection />
+
       {/* ══ FEATURES BENTO ════════════════════════════════════ */}
       <section
         id="features"
@@ -657,6 +662,9 @@ const Landing = () => {
 
         <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.05) 60%, transparent)' }} />
       </section>
+
+      {/* ══ TESTIMONIALS ══════════════════════════════════════ */}
+      <Testimonials />
 
       {/* ══ FEAR CLOSER ═══════════════════════════════════════ */}
       <section

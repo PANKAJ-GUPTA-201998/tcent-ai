@@ -27,6 +27,22 @@ const SOCIAL_LINKS = [
 
 const Footer = () => (
   <footer className="border-t border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-950">
+
+    {/* Trust bar */}
+    <div className="border-b border-gray-100 dark:border-slate-800/60">
+      <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-center gap-2">
+        <span className="inline-flex items-center gap-1.5 text-xs text-gray-400 dark:text-slate-500">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="7" stroke="#3B82F6" strokeOpacity="0.5" />
+            <path d="M5 8l2 2 4-4" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Trusted by{' '}
+          <span className="font-semibold text-gray-600 dark:text-slate-400">1,200+ students</span>
+          {' '}across India
+        </span>
+      </div>
+    </div>
+
     <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
 
       {/* Brand + copyright */}
