@@ -7,15 +7,15 @@ import axios from 'axios';
 const ATS_URL = '/api/ats';
 
 /**
- * Analyze resume PDF against a job description
- * @param {File} resumeFile - PDF file object
+ * Analyze resume against a job description.
+ * @param {File|null} resumeFile - PDF file object, or null to use the saved resume
  * @param {string} jobDescription - Pasted JD text
  * @returns {Promise} ATS analysis result
  */
 export const analyzeATS = async (resumeFile, jobDescription) => {
   try {
     const formData = new FormData();
-    formData.append('resume', resumeFile);
+    if (resumeFile) formData.append('resume', resumeFile);
     formData.append('jobDescription', jobDescription);
 
     const token = localStorage.getItem('token');

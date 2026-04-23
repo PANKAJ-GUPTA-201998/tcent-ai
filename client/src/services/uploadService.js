@@ -85,6 +85,22 @@ export const uploadProfilePicture = async (file, onProgress) => {
 };
 
 /**
+ * Get the current user's saved resume (latest upload)
+ * @returns {Promise} { resume: { id, name, url, size, extractedText, uploadedAt } | null }
+ */
+export const getMyResume = async () => {
+  try {
+    const response = await axios.get(
+      `${UPLOAD_SERVICE_URL}/my-files`,
+      getAuthHeader()
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Failed to fetch saved resume' };
+  }
+};
+
+/**
  * Get File Info
  * @param {string} fileId - File ID
  * @returns {Promise} File metadata

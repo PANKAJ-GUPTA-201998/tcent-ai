@@ -566,11 +566,7 @@ router.put(
         });
       }
 
-      if (reason) {
-        // Reason is intentionally not persisted — Assessment schema has no such field.
-        // Log for server-side analytics; add a RetakeLog model if persistence is needed.
-        console.log(`[retake] userId=${userId} reason=${reason} attemptsRemaining=${attemptsRemaining}`);
-      }
+      // reason is intentionally not persisted — add a RetakeLog model if persistence is needed.
 
       res.json({
         success: true,

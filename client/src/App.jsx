@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -21,6 +21,9 @@ import AssessmentPage from './pages/AssessmentPage';
 import CareersPage from './pages/CareersPage';
 import ATSChecker from './pages/ATSChecker';
 import OAuthCallback from './pages/OAuthCallback';
+import NotFound from './pages/NotFound';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
 
 const pageVariants = {
   initial: { opacity: 0, y: 16 },
@@ -50,6 +53,8 @@ const AnimatedRoutes = () => {
         <Route path="/login"          element={<PageWrapper><Login /></PageWrapper>} />
         <Route path="/register"       element={<PageWrapper><Register /></PageWrapper>} />
         <Route path="/oauth/callback" element={<OAuthCallback />} />
+        <Route path="/privacy"        element={<PageWrapper><Privacy /></PageWrapper>} />
+        <Route path="/terms"          element={<PageWrapper><Terms /></PageWrapper>} />
 
         {/* Protected Routes */}
         <Route
@@ -151,8 +156,8 @@ const AnimatedRoutes = () => {
           }
         />
 
-        {/* Catch all */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        {/* 404 — must be last */}
+        <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );

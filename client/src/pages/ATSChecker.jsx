@@ -5,6 +5,7 @@ import ResumeUpload from '../components/ats/ResumeUpload';
 import JobDescriptionInput from '../components/ats/JobDescriptionInput';
 import ATSResults from '../components/ats/ATSResults';
 import { analyzeATS } from '../services/atsService';
+import { getMyResume } from '../services/uploadService';
 
 // ─── Analyzing Phase Steps ────────────────────────────────────────────────────
 
@@ -122,13 +123,22 @@ const fadeUp = {
 };
 
 const ATSChecker = () => {
-  const [resumeFile, setResumeFile] = useState(null);
+  const [resumeFile, setResumeFile] = useState(null);   // newly selected File object
+  const [savedResume, setSavedResume] = useState(null); // resume already stored in DB
   const [jobDescription, setJobDescription] = useState('');
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const canAnalyze = resumeFile && jobDescription.trim().length >= 50 && !loading;
+  // Load saved resume on mount so the user doesn't have to re-upload
+  useEffect(() => {
+    getMyResume()
+      .then(({ resume }) => { if (resume) setSavedResume(resume); })
+      .catch(() => {}); // silently ignore — user can still upload manually
+  }, []);
+
+  const hasResume = resumeFile || savedResume;
+  const canAnalyze = hasResume && jobDescription.trim().length >= 50 && !loading;
 
   const handleAnalyze = async () => {
     if (!canAnalyze) return;
@@ -137,7 +147,9 @@ const ATSChecker = () => {
     setLoading(true);
 
     try {
-      const data = await analyzeATS(resumeFile, jobDescription);
+      // Pass the new file if the user selected one; otherwise null tells the
+      // backend to use the saved resume from the database.
+      const data = await analyzeATS(resumeFile || null, jobDescription);
       // Small delay so the last step's checkmark is visible before results appear
       await new Promise((r) => setTimeout(r, 600));
       setResults(data);
@@ -171,7 +183,7 @@ const ATSChecker = () => {
         {/* Step indicators */}
         <div className="flex items-center gap-2 mt-5">
           {[
-            { n: '1', label: 'Upload resume', done: !!resumeFile },
+            { n: '1', label: 'Upload resume', done: !!hasResume },
             { n: '2', label: 'Paste job description', done: jobDescription.trim().length >= 50 },
             { n: '3', label: 'Get your score', done: false },
           ].map((step, i) => (
@@ -196,11 +208,15 @@ const ATSChecker = () => {
       <motion.div custom={1} variants={fadeUp} initial="hidden" animate="visible"
         className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className={`rounded-2xl border p-5 transition-all duration-200 ${
-          resumeFile
+          hasResume
             ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50'
             : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800'
         }`}>
-          <ResumeUpload file={resumeFile} onChange={setResumeFile} />
+          <ResumeUpload
+            file={resumeFile}
+            onChange={setResumeFile}
+            savedResume={savedResume}
+          />
         </div>
         <div className={`rounded-2xl border p-5 transition-all duration-200 ${
           jobDescription.trim().length >= 50
@@ -233,7 +249,7 @@ const ATSChecker = () => {
           Analyze ATS Match
         </button>
         <p className="text-xs text-gray-400 h-4">
-          {!resumeFile ? 'Upload your resume PDF to get started'
+          {!hasResume ? 'Upload your resume PDF to get started'
             : jobDescription.trim().length < 50 ? 'Paste a job description (at least 50 characters)'
             : 'Ready — click to analyze'}
         </p>

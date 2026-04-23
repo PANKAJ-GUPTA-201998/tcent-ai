@@ -3,31 +3,33 @@
 // ============================================
 // Accepts resume PDF + job description,
 // extracts text, calls Groq, returns ATS report.
+// If no PDF is uploaded, falls back to the user's
+// most recently saved resume in the database.
 
 const pdfParse = require('pdf-parse');
 const Groq = require('groq-sdk');
+const mongoose = require('mongoose');
 const { buildATSPrompt } = require('../prompts/atsPrompt');
 const { extractKeywords, calculateBasicMatch } = require('../utils/keywordExtractor');
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+// Lazy-load the File model so it works whether mongoose is already
+// initialised by the unified Vercel handler or a standalone server.
+const getFileModel = () => {
+  if (mongoose.models.File) return mongoose.models.File;
+  return require('../../upload-service/src/models/File');
+};
+
 /**
  * Analyze Resume Against Job Description
  * POST /api/ats/analyze
  * Body: multipart/form-data
- *   - resume       : PDF file (field name "resume")
- *   - jobDescription : string (in form body)
+ *   - resume         : PDF file (optional — uses saved resume if omitted)
+ *   - jobDescription : string
  */
 const analyzeATS = async (req, res) => {
   try {
-    // Validate uploaded file
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please upload a resume PDF file.',
-      });
-    }
-
     const { jobDescription } = req.body;
 
     if (!jobDescription || jobDescription.trim().length < 50) {
@@ -44,23 +46,44 @@ const analyzeATS = async (req, res) => {
       });
     }
 
-    // Extract text from PDF buffer
+    // ── Resolve resume text ────────────────────────────────────────────────────
     let resumeText;
-    try {
-      const pdfData = await pdfParse(req.file.buffer);
-      resumeText = pdfData.text;
-    } catch {
-      return res.status(400).json({
-        success: false,
-        message: 'Could not read PDF. Make sure the file is not password-protected or corrupted.',
-      });
-    }
 
-    if (!resumeText || resumeText.trim().length < 50) {
-      return res.status(400).json({
-        success: false,
-        message: 'Could not extract text from this PDF. Please upload a text-based PDF (not a scanned image).',
-      });
+    if (req.file) {
+      // New file uploaded — extract text from it
+      try {
+        const pdfData = await pdfParse(req.file.buffer);
+        resumeText = pdfData.text;
+      } catch {
+        return res.status(400).json({
+          success: false,
+          message: 'Could not read PDF. Make sure the file is not password-protected or corrupted.',
+        });
+      }
+
+      if (!resumeText || resumeText.trim().length < 50) {
+        return res.status(400).json({
+          success: false,
+          message: 'Could not extract text from this PDF. Please upload a text-based PDF (not a scanned image).',
+        });
+      }
+    } else {
+      // No file uploaded — look up the user's saved resume
+      const File = getFileModel();
+      const savedResume = await File.findOne({
+        userId: req.user.id,
+        fileType: 'resume',
+        status: 'completed',
+      }).sort({ uploadedAt: -1 });
+
+      if (!savedResume || !savedResume.extractedText) {
+        return res.status(400).json({
+          success: false,
+          message: 'No resume found. Please upload a resume PDF file.',
+        });
+      }
+
+      resumeText = savedResume.extractedText;
     }
 
     // Build prompt and call Groq

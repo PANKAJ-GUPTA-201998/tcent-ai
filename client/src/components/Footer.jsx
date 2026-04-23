@@ -21,8 +21,8 @@ const XIcon = ({ size = 18 }) => (
 
 const NAV_LINKS = [
   { label: 'About',   to: '/' },
-  { label: 'Privacy', to: '/login' },
-  { label: 'Terms',   to: '/login' },
+  { label: 'Privacy', to: '/privacy' },
+  { label: 'Terms',   to: '/terms' },
 ];
 
 const SOCIAL_LINKS = [
