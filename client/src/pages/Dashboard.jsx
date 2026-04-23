@@ -8,6 +8,7 @@ import CareerTimeline    from '../components/dashboard/CareerTimeline';
 import AIRecommendations from '../components/dashboard/AIRecommendations';
 import RecentActivity    from '../components/dashboard/RecentActivity';
 import PremiumUpsell     from '../components/dashboard/PremiumUpsell';
+import FeatureHub        from '../components/dashboard/FeatureHub';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -27,6 +28,9 @@ const Dashboard = () => {
 
         {/* ── Hero ── */}
         <HeroCard data={data} userName={data.user.name} />
+
+        {/* ── All Tools hub ── */}
+        <FeatureHub />
 
         {/* ── 4-col stat grid ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">

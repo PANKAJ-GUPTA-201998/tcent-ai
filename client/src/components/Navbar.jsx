@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { ChevronDown, User, Upload, ScanSearch, LogOut, Menu, X } from 'lucide-react';
+import { ChevronDown, User, Upload, ScanSearch, LogOut, Menu, X, Star, LayoutGrid } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 /* ── Active link ────────────────────────────────────────────── */
@@ -10,6 +10,55 @@ const navLinkClass = ({ isActive }) =>
       ? 'text-white'
       : 'text-slate-400 hover:text-white'
   }`;
+
+/* ── Tools dropdown ─────────────────────────────────────────── */
+const TOOLS = [
+  { to: '/ats-checker',   icon: ScanSearch, label: 'ATS Checker',    desc: 'Match resume to job description' },
+  { to: '/upload-resume', icon: Upload,     label: 'Upload Resume',  desc: 'Parse & score your resume' },
+  { to: '/careers',       icon: Star,       label: 'Career Matches', desc: 'Personality-based career suggestions' },
+];
+
+const ToolsMenu = () => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1 text-sm font-medium transition-colors px-1 py-0.5 text-slate-400 hover:text-white"
+      >
+        <LayoutGrid size={13} />
+        Tools
+        <ChevronDown size={12} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full mt-2 w-64 bg-[#1E293B] border border-slate-700 rounded-xl shadow-2xl py-2 z-50">
+          <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 px-3 pb-1.5">Quick Access</p>
+          {TOOLS.map(({ to, icon: Icon, label, desc }) => (
+            <Link key={to} to={to} onClick={() => setOpen(false)}
+              className="flex items-start gap-3 px-3 py-2.5 hover:bg-white/5 transition-colors group">
+              <div className="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Icon size={13} className="text-slate-400 group-hover:text-emerald-400 transition-colors" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-200 group-hover:text-white transition-colors">{label}</p>
+                <p className="text-xs text-slate-500">{desc}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 /* ── User avatar dropdown ───────────────────────────────────── */
 const UserMenu = ({ user, onLogout }) => {
@@ -46,9 +95,7 @@ const UserMenu = ({ user, onLogout }) => {
             <p className="text-xs text-slate-500 truncate">{user?.email}</p>
           </div>
           {[
-            { to: '/profile',      icon: User,      label: 'Profile' },
-            { to: '/upload-resume', icon: Upload,    label: 'Upload Resume' },
-            { to: '/ats-checker',  icon: ScanSearch, label: 'ATS Checker' },
+            { to: '/profile', icon: User, label: 'Profile' },
           ].map(({ to, icon: Icon, label }) => (
             <Link key={to} to={to} onClick={() => setOpen(false)}
               className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
@@ -74,12 +121,14 @@ const MobileMenu = ({ open, onClose, isAuthenticated, onLogout }) => {
     <div className="sm:hidden border-t border-slate-800 bg-[#0F172A] px-4 pb-5 pt-3 space-y-1">
       {isAuthenticated ? (
         <>
-          <NavLink to="/dashboard"  onClick={onClose} className={navLinkClass}>Dashboard</NavLink>
-          <NavLink to="/career"     onClick={onClose} className={navLinkClass}>Services</NavLink>
-          <NavLink to="/assessment" onClick={onClose} className={navLinkClass}>Assessment</NavLink>
-          <NavLink to="/ai-advisor" onClick={onClose} className={navLinkClass}>AI Advisor</NavLink>
-          <NavLink to="/profile"    onClick={onClose} className={navLinkClass}>Profile</NavLink>
-          <NavLink to="/ats-checker" onClick={onClose} className={navLinkClass}>ATS Checker</NavLink>
+          <NavLink to="/dashboard"    onClick={onClose} className={navLinkClass}>Dashboard</NavLink>
+          <NavLink to="/career"       onClick={onClose} className={navLinkClass}>Career Intel</NavLink>
+          <NavLink to="/assessment"   onClick={onClose} className={navLinkClass}>Assessment</NavLink>
+          <NavLink to="/ai-advisor"   onClick={onClose} className={navLinkClass}>AI Advisor</NavLink>
+          <NavLink to="/ats-checker"  onClick={onClose} className={navLinkClass}>ATS Checker</NavLink>
+          <NavLink to="/upload-resume" onClick={onClose} className={navLinkClass}>Upload Resume</NavLink>
+          <NavLink to="/careers"      onClick={onClose} className={navLinkClass}>Career Matches</NavLink>
+          <NavLink to="/profile"      onClick={onClose} className={navLinkClass}>Profile</NavLink>
           <div className="pt-2">
             <button onClick={() => { onLogout(); onClose(); }}
               className="w-full text-left text-sm text-red-400 px-1 py-0.5">Logout</button>
@@ -147,9 +196,10 @@ const Navbar = () => {
             {isAuthenticated ? (
               <>
                 <NavLink to="/dashboard"  className={navLinkClass}>Dashboard</NavLink>
-                <NavLink to="/career"     className={navLinkClass}>Services</NavLink>
+                <NavLink to="/career"     className={navLinkClass}>Career Intel</NavLink>
                 <NavLink to="/assessment" className={navLinkClass}>Assessment</NavLink>
                 <NavLink to="/ai-advisor" className={navLinkClass}>AI Advisor</NavLink>
+                <ToolsMenu />
               </>
             ) : (
               <>
