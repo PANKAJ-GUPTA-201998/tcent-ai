@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
+import OAuthButtons from '../components/auth/OAuthButtons';
 
 const inputCls =
   'w-full px-4 py-3 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600 transition';
@@ -114,6 +115,8 @@ const Register = () => {
             {loading ? 'Creating account…' : 'Register'}
           </Button>
         </form>
+
+        <OAuthButtons label="Sign up" />
 
         <p className="text-center text-sm mt-6" style={{ color: '#475569' }}>
           Already have an account?{' '}

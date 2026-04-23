@@ -97,8 +97,16 @@ export const AuthProvider = ({ children }) => {
 
   const getToken = () => localStorage.getItem('token');
 
+  /** Called by OAuthCallback page after the backend redirects with ?token=... */
+  const loginWithOAuth = useCallback((token, email, name) => {
+    localStorage.setItem('token',     token);
+    localStorage.setItem('userEmail', email);
+    localStorage.setItem('userName',  name ?? '');
+    setUser({ email, name: name || email.split('@')[0] });
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, getToken, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, register, logout, getToken, loginWithOAuth, isAuthenticated: !!user }}>
       {!loading && children}
     </AuthContext.Provider>
   );

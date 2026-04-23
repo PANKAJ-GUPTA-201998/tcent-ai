@@ -20,6 +20,7 @@ import { default as PersonalityQuiz } from './components/PersonalityQuiz';
 import AssessmentPage from './pages/AssessmentPage';
 import CareersPage from './pages/CareersPage';
 import ATSChecker from './pages/ATSChecker';
+import OAuthCallback from './pages/OAuthCallback';
 
 const pageVariants = {
   initial: { opacity: 0, y: 16 },
@@ -46,8 +47,9 @@ const AnimatedRoutes = () => {
       <Routes location={location} key={location.pathname}>
         {/* Public Routes */}
         <Route path="/" element={<PageWrapper><Landing /></PageWrapper>} />
-        <Route path="/login"   element={<PageWrapper><Login /></PageWrapper>} />
-        <Route path="/register" element={<PageWrapper><Register /></PageWrapper>} />
+        <Route path="/login"          element={<PageWrapper><Login /></PageWrapper>} />
+        <Route path="/register"       element={<PageWrapper><Register /></PageWrapper>} />
+        <Route path="/oauth/callback" element={<OAuthCallback />} />
 
         {/* Protected Routes */}
         <Route

@@ -27,9 +27,28 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, 'Password is required'],
+      required: false, // OAuth users don't set a password
       minlength: [6, 'Password must be at least 6 characters'],
       select: false // Don't return password by default in queries
+    },
+    provider: {
+      type: String,
+      enum: ['local', 'google', 'linkedin'],
+      default: 'local',
+    },
+    googleId: {
+      type: String,
+      default: null,
+      sparse: true,
+    },
+    linkedinId: {
+      type: String,
+      default: null,
+      sparse: true,
+    },
+    avatar: {
+      type: String,
+      default: null,
     },
     role: {
       type: String,
@@ -51,8 +70,8 @@ const userSchema = new mongoose.Schema(
  * This runs automatically when user.save() is called
  */
 userSchema.pre('save', async function (next) {
-  // Only hash if password is modified (not on every save)
-  if (!this.isModified('password')) {
+  // Only hash if password exists and was modified
+  if (!this.isModified('password') || !this.password) {
     return next();
   }
 

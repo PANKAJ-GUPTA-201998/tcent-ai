@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { register, login, getMe } = require('../controllers/auth.controller');
+const { googleRedirect, googleCallback, linkedinRedirect, linkedinCallback } = require('../controllers/oauth.controller');
 const { protect } = require('../middleware/auth.middleware');
-const { 
-  registerValidation, 
-  loginValidation, 
-  validate 
+const {
+  registerValidation,
+  loginValidation,
+  validate
 } = require('../utils/validators');
 
 /**
@@ -28,5 +29,17 @@ router.post('/login', loginValidation, validate, login);
  * @access  Private
  */
 router.get('/me', protect, getMe);
+
+/**
+ * OAuth Routes — Google
+ */
+router.get('/google',          googleRedirect);
+router.get('/google/callback', googleCallback);
+
+/**
+ * OAuth Routes — LinkedIn
+ */
+router.get('/linkedin',          linkedinRedirect);
+router.get('/linkedin/callback', linkedinCallback);
 
 module.exports = router;
