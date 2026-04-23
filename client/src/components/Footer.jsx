@@ -23,7 +23,6 @@ const NAV_LINKS = [
   { label: 'About',   to: '/' },
   { label: 'Privacy', to: '/login' },
   { label: 'Terms',   to: '/login' },
-  { label: 'Contact', to: '/login' },
 ];
 
 const SOCIAL_LINKS = [
@@ -58,9 +57,18 @@ const Footer = () => (
         <span className="text-sm font-black text-white tracking-tight">
           Tcent<span style={{ color: '#059669' }}>.AI</span>
         </span>
-        <span className="text-xs" style={{ color: '#1E293B' }}>
+        <span className="text-xs" style={{ color: '#475569' }}>
           © {new Date().getFullYear()} Tcent.AI · Premium Career Growth Platform
         </span>
+        <a
+          href="mailto:info@tcent.ai"
+          className="text-xs transition-colors"
+          style={{ color: '#334155' }}
+          onMouseEnter={e => { e.currentTarget.style.color = '#059669'; }}
+          onMouseLeave={e => { e.currentTarget.style.color = '#334155'; }}
+        >
+          info@tcent.ai
+        </a>
       </div>
 
       {/* Nav links */}
