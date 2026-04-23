@@ -128,6 +128,7 @@ const MobileMenu = ({ open, onClose, isAuthenticated, onLogout }) => {
           <NavLink to="/ats-checker"  onClick={onClose} className={navLinkClass}>ATS Checker</NavLink>
           <NavLink to="/upload-resume" onClick={onClose} className={navLinkClass}>Upload Resume</NavLink>
           <NavLink to="/careers"      onClick={onClose} className={navLinkClass}>Career Matches</NavLink>
+          <NavLink to="/pricing"      onClick={onClose} className={navLinkClass}>Pricing</NavLink>
           <NavLink to="/profile"      onClick={onClose} className={navLinkClass}>Profile</NavLink>
           <div className="pt-2">
             <button onClick={() => { onLogout(); onClose(); }}
@@ -206,7 +207,7 @@ const Navbar = () => {
                 <NavLink to="/"                end className={navLinkClass}>Home</NavLink>
                 <a href="/#services"           className="text-sm font-medium text-slate-400 hover:text-white transition-colors">Services</a>
                 <a href="/#testimonials"       className="text-sm font-medium text-slate-400 hover:text-white transition-colors">Success Stories</a>
-                <a href="/#pricing"            className="text-sm font-medium text-slate-400 hover:text-white transition-colors">Pricing</a>
+                <NavLink to="/pricing"          className={navLinkClass}>Pricing</NavLink>
               </>
             )}
           </nav>

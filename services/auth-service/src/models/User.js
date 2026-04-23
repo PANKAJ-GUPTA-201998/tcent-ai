@@ -58,7 +58,42 @@ const userSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true
-    }
+    },
+
+    // ── Subscription ──────────────────────────────────────────
+    subscription: {
+      plan: {
+        type: String,
+        enum: ['starter', 'pro', 'premium'],
+        default: null,
+      },
+      status: {
+        type: String,
+        enum: ['active', 'expired', 'cancelled'],
+        default: null,
+      },
+      startDate: { type: Date, default: null },
+      endDate:   { type: Date, default: null },
+      amount:    { type: Number, default: null },   // INR
+      autoRenew: { type: Boolean, default: false },
+    },
+
+    // ── Payment History ───────────────────────────────────────
+    paymentHistory: [
+      {
+        orderId:   { type: String, required: true },
+        paymentId: { type: String, default: '' },
+        amount:    { type: Number, required: true },  // INR
+        planName:  { type: String, required: true },
+        status: {
+          type: String,
+          enum: ['paid', 'failed', 'refunded'],
+          required: true,
+        },
+        paidAt: { type: Date, default: Date.now },
+        method: { type: String, default: '' },        // card, upi, netbanking…
+      },
+    ],
   },
   {
     timestamps: true // Automatically adds createdAt and updatedAt

@@ -24,6 +24,7 @@ import OAuthCallback from './pages/OAuthCallback';
 import NotFound from './pages/NotFound';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
+import Pricing from './pages/Pricing';
 
 const pageVariants = {
   initial: { opacity: 0, y: 16 },
@@ -55,6 +56,7 @@ const AnimatedRoutes = () => {
         <Route path="/oauth/callback" element={<OAuthCallback />} />
         <Route path="/privacy"        element={<PageWrapper><Privacy /></PageWrapper>} />
         <Route path="/terms"          element={<PageWrapper><Terms /></PageWrapper>} />
+        <Route path="/pricing"        element={<PageWrapper><Pricing /></PageWrapper>} />
 
         {/* Protected Routes */}
         <Route
