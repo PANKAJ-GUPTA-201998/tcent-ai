@@ -66,7 +66,7 @@ exports.googleCallback = async (req, res) => {
 
   try {
     // Verify state to prevent CSRF
-    jwt.verify(state, process.env.JWT_SECRET);
+    jwt.verify(state, process.env.JWT_SECRET, { algorithms: ['HS256'] });
 
     // Exchange code → access token
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
@@ -149,7 +149,7 @@ exports.linkedinCallback = async (req, res) => {
 
   try {
     // Verify state
-    jwt.verify(state, process.env.JWT_SECRET);
+    jwt.verify(state, process.env.JWT_SECRET, { algorithms: ['HS256'] });
 
     // Exchange code → access token
     const tokenParams = new URLSearchParams({

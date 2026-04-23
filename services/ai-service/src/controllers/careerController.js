@@ -82,9 +82,9 @@ const analyzeCareer = async (req, res) => {
 
     // Skill health score: weighted average of top 3 match scores
     const top3 = topCareers.slice(0, 3);
-    const healthScore = Math.round(
-      top3.reduce((sum, c) => sum + c.matchPercent, 0) / top3.length
-    );
+    const healthScore = top3.length > 0
+      ? Math.round(top3.reduce((sum, c) => sum + c.matchPercent, 0) / top3.length)
+      : 0;
 
     // Skill gaps: missing skills from the #1 career path
     const skillGaps = topCareers[0]?.missingSkills || [];
@@ -103,10 +103,7 @@ const analyzeCareer = async (req, res) => {
 
   } catch (error) {
     console.error('Career Analysis Error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to analyze career intelligence.'
-    });
+    res.status(500).json({ success: false, message: 'Failed to analyze career intelligence.' });
   }
 };
 

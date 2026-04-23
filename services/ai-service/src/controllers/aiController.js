@@ -39,8 +39,7 @@ const getCareerAdvice = async (req, res) => {
       return res.json({
         success: true,
         answer: cachedResponse,
-        cached: true,
-        user: req.user.name
+        cached: true
       });
     }
 
@@ -53,16 +52,12 @@ const getCareerAdvice = async (req, res) => {
     res.json({
       success: true,
       answer,
-      cached: false,
-      user: req.user.name
+      cached: false
     });
 
   } catch (error) {
     console.error('Career Advice Error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to get career advice.'
-    });
+    res.status(500).json({ success: false, message: 'Failed to get career advice.' });
   }
 };
 
@@ -125,7 +120,7 @@ const reviewResume = async (req, res) => {
     console.error('Resume Review Error:', error);
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to review resume.'
+      message: 'Failed to review resume.'
     });
   }
 };
@@ -182,7 +177,7 @@ const analyzeSkillGap = async (req, res) => {
     console.error('Skill Gap Analysis Error:', error);
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to analyze skill gap.'
+      message: 'Failed to analyze skill gap.'
     });
   }
 };

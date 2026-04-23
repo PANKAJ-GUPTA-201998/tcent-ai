@@ -3,6 +3,7 @@ import { getLogoutFn } from '../context/AuthContext';
 
 const api = axios.create({
   baseURL: '',
+  timeout: 30000, // 30s — prevents hung requests on slow AI endpoints
   headers: { 'Content-Type': 'application/json' },
 });
 

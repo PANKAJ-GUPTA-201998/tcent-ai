@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /ai-advisor
+Disallow: /upload-resume
+Disallow: /ats-checker
+Disallow: /career
+Disallow: /assessment
+Disallow: /careers
+Disallow: /oauth/callback
+Disallow: /api/
+
+Sitemap: https://tcent-ai.vercel.app/sitemap.xml
