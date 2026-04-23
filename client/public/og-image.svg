@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="20%" cy="30%" r="40%">
+      <stop offset="0%"   stop-color="#10B981" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#10B981" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="80%" cy="70%" r="35%">
+      <stop offset="0%"   stop-color="#6366F1" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#6366F1" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow1)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+
+  <!-- Top border accent -->
+  <rect x="0" y="0" width="1200" height="4" fill="#10B981"/>
+
+  <!-- Logo -->
+  <text x="90" y="120" font-family="Inter, Arial, sans-serif" font-weight="900"
+    font-size="56" fill="#FFFFFF">Tcent<tspan fill="#10B981">.AI</tspan></text>
+
+  <!-- Premium badge -->
+  <rect x="90" y="140" width="110" height="28" rx="6" fill="none" stroke="#10B981" stroke-opacity="0.4" stroke-width="1.5"/>
+  <text x="145" y="159" text-anchor="middle" font-family="Inter, Arial, sans-serif"
+    font-weight="700" font-size="13" fill="#10B981" letter-spacing="2">PREMIUM</text>
+
+  <!-- Main headline -->
+  <text x="90" y="270" font-family="Inter, Arial, sans-serif" font-weight="900"
+    font-size="72" fill="#FFFFFF">Double Your Salary</text>
+  <text x="90" y="355" font-family="Inter, Arial, sans-serif" font-weight="900"
+    font-size="72" fill="#FFFFFF">in <tspan fill="#10B981">12 Months</tspan></text>
+
+  <!-- Sub-headline -->
+  <text x="90" y="430" font-family="Inter, Arial, sans-serif" font-weight="400"
+    font-size="28" fill="#94A3B8">AI-powered career growth for Indian professionals</text>
+
+  <!-- Feature pills -->
+  <rect x="90"  y="490" width="180" height="44" rx="22" fill="rgba(16,185,129,0.1)" stroke="rgba(16,185,129,0.3)" stroke-width="1.5"/>
+  <text x="180" y="517" text-anchor="middle" font-family="Inter, Arial, sans-serif"
+    font-weight="600" font-size="18" fill="#10B981">ATS Checker</text>
+
+  <rect x="288" y="490" width="220" height="44" rx="22" fill="rgba(99,102,241,0.1)" stroke="rgba(99,102,241,0.3)" stroke-width="1.5"/>
+  <text x="398" y="517" text-anchor="middle" font-family="Inter, Arial, sans-serif"
+    font-weight="600" font-size="18" fill="#818CF8">Career Intel</text>
+
+  <rect x="526" y="490" width="210" height="44" rx="22" fill="rgba(236,72,153,0.1)" stroke="rgba(236,72,153,0.3)" stroke-width="1.5"/>
+  <text x="631" y="517" text-anchor="middle" font-family="Inter, Arial, sans-serif"
+    font-weight="600" font-size="18" fill="#F472B6">AI Advisor</text>
+
+  <!-- Right side stat card -->
+  <rect x="850" y="200" width="270" height="220" rx="20"
+    fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>
+  <text x="985" y="255" text-anchor="middle" font-family="Inter, Arial, sans-serif"
+    font-weight="900" font-size="64" fill="#10B981">87%</text>
+  <text x="985" y="295" text-anchor="middle" font-family="Inter, Arial, sans-serif"
+    font-weight="600" font-size="20" fill="#94A3B8">Average salary jump</text>
+  <text x="985" y="340" text-anchor="middle" font-family="Inter, Arial, sans-serif"
+    font-weight="400" font-size="16" fill="#475569">across 450+ professionals</text>
+  <rect x="895" y="365" width="180" height="36" rx="18" fill="#10B981"/>
+  <text x="985" y="388" text-anchor="middle" font-family="Inter, Arial, sans-serif"
+    font-weight="700" font-size="16" fill="#FFFFFF">Start Free Today</text>
+
+  <!-- URL -->
+  <text x="90" y="600" font-family="Inter, Arial, sans-serif" font-weight="500"
+    font-size="20" fill="#334155">tcent-ai.vercel.app</text>
+</svg>
