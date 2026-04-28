@@ -110,7 +110,7 @@ const QuickQuestions = ({ onQuestionClick, disabled, profile }) => {
             disabled={disabled}
             className="flex items-start gap-3 p-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg hover:border-blue-400 hover:shadow-sm transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span className="text-2xl">{item.icon}</span>
+            <span className="text-2xl leading-none select-none" style={{ fontFamily: 'Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif' }}>{item.icon}</span>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-800 dark:text-gray-100">
                 {item.question}
