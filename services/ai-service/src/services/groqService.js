@@ -20,13 +20,62 @@ class GroqService {
   }
 
   /**
+   * Build a profile context string to inject into system prompt
+   * @param {object|null} profile
+   * @returns {string}
+   */
+  _buildProfileContext(profile) {
+    if (!profile) return '';
+
+    const parts = [];
+
+    if (profile.skills && profile.skills.length > 0) {
+      parts.push(`Current Skills: ${profile.skills.join(', ')}`);
+    }
+
+    if (profile.experience && profile.experience.length > 0) {
+      const expStr = profile.experience
+        .map(e => `${e.role} at ${e.company} (${e.years} yr${e.years !== 1 ? 's' : ''})`)
+        .join('; ');
+      parts.push(`Work Experience: ${expStr}`);
+    }
+
+    if (profile.careerGoals) {
+      parts.push(`Career Goals: ${profile.careerGoals}`);
+    }
+
+    if (profile.preferences) {
+      const prefs = [];
+      if (profile.preferences.industry?.length > 0) {
+        prefs.push(`industries: ${profile.preferences.industry.join(', ')}`);
+      }
+      if (profile.preferences.location) {
+        prefs.push(`location: ${profile.preferences.location}`);
+      }
+      if (profile.preferences.workMode) {
+        prefs.push(`work mode: ${profile.preferences.workMode}`);
+      }
+      if (prefs.length > 0) {
+        parts.push(`Preferences: ${prefs.join(', ')}`);
+      }
+    }
+
+    if (parts.length === 0) return '';
+
+    return `\n\nUser Profile (use this to personalize your advice):\n${parts.join('\n')}`;
+  }
+
+  /**
    * Get Career Advice
    * @param {string} question - User's career question
+   * @param {object|null} profile - Optional user profile for personalization
    * @returns {Promise<string>} AI's response
    */
-  async getCareerAdvice(question) {
+  async getCareerAdvice(question, profile = null) {
     try {
-      const systemPrompt = `You are an expert career counselor for Tcent.AI platform. 
+      const profileContext = this._buildProfileContext(profile);
+
+      const systemPrompt = `You are an expert career counselor for Tcent.AI platform.
 Your role is to provide personalized, actionable career guidance.
 
 Guidelines:
@@ -36,10 +85,11 @@ Guidelines:
 - Mention relevant skills and courses when applicable
 - Keep responses concise (200-300 words)
 - Be empathetic and understanding
+- If a user profile is provided, tailor your advice specifically to their skills, experience, goals, and preferences — reference them directly rather than giving generic advice${profileContext}
 
 Always structure your advice with:
 1. Understanding the situation
-2. Key recommendations
+2. Key recommendations (personalized to their profile if available)
 3. Next steps`;
 
       const completion = await this.client.chat.completions.create({

@@ -2,9 +2,9 @@ import api from '../utils/api';
 
 const AI_SERVICE_URL = '/api/ai';
 
-export const getCareerAdvice = async (question) => {
+export const getCareerAdvice = async (question, profile = null) => {
   try {
-    const response = await api.post(`${AI_SERVICE_URL}/career-advice`, { question });
+    const response = await api.post(`${AI_SERVICE_URL}/career-advice`, { question, profile });
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'Failed to get career advice' };

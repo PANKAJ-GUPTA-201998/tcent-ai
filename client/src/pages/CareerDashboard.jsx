@@ -9,7 +9,7 @@ import {
   ResponsiveContainer, Cell,
 } from 'recharts';
 import { AlertCircle } from 'lucide-react';
-import { getMyResume, analyzeCareer } from '../services/careerService';
+import { getMyResume, analyzeCareer, getMyProfile } from '../services/careerService';
 import { Link } from 'react-router-dom';
 import Button from '../components/ui/Button';
 
@@ -94,7 +94,11 @@ const CareerDashboard = () => {
     setError(null);
 
     try {
-      const filesData = await getMyResume();
+      // Fetch resume and profile in parallel
+      const [filesData, profile] = await Promise.all([
+        getMyResume(),
+        getMyProfile(),
+      ]);
 
       if (!filesData.resume?.extractedText) {
         setError('No resume found. Please upload your resume first.');
@@ -102,7 +106,7 @@ const CareerDashboard = () => {
         return;
       }
 
-      const result = await analyzeCareer(filesData.resume.extractedText);
+      const result = await analyzeCareer(filesData.resume.extractedText, profile);
       setData(result);
       setStatus('done');
     } catch (err) {
@@ -123,6 +127,12 @@ const CareerDashboard = () => {
       >
         <h1 className="text-3xl font-bold text-gray-900 mb-1">Career Intelligence</h1>
         <p className="text-gray-500">AI-powered career matching based on your resume skills</p>
+        {data?.isPersonalized && data?.personalizationNote && (
+          <div className="mt-3 inline-flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-medium px-3 py-1.5 rounded-full">
+            <span>✨</span>
+            <span>Personalized · {data.personalizationNote}</span>
+          </div>
+        )}
       </motion.div>
 
       {/* Idle state */}
@@ -228,6 +238,11 @@ const CareerDashboard = () => {
             >
               <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
                 Skills Detected ({data.totalSkills})
+                {data.profileSkillCount > 0 && (
+                  <span className="ml-2 text-indigo-400 normal-case font-normal">
+                    +{data.profileSkillCount} from profile
+                  </span>
+                )}
               </h3>
               <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1">
                 {data.extractedSkills.map(skill => (
@@ -293,6 +308,11 @@ const CareerDashboard = () => {
                           {idx === 0 && (
                             <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">
                               Best Match
+                            </span>
+                          )}
+                          {career.profileBoost > 0 && (
+                            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-xs rounded-full font-medium" title={`Boosted by: ${career.boostReasons.join(', ')}`}>
+                              ✨ +{career.profileBoost}% profile boost
                             </span>
                           )}
                         </div>

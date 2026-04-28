@@ -14,7 +14,7 @@ const cacheService = require('../services/cacheService');
  */
 const getCareerAdvice = async (req, res) => {
   try {
-    const { question } = req.body;
+    const { question, profile } = req.body;
 
     // Validation
     if (!question || question.trim().length === 0) {
@@ -31,28 +31,40 @@ const getCareerAdvice = async (req, res) => {
       });
     }
 
-    // Check cache first
-    const cacheKey = cacheService.generateCareerAdviceKey(question);
-    const cachedResponse = await cacheService.get(cacheKey);
+    // Cache key: include a profile fingerprint so personalized answers aren't shared
+    const profileFingerprint = profile
+      ? Buffer.from(JSON.stringify({
+          skills: profile.skills || [],
+          goals: (profile.careerGoals || '').slice(0, 80),
+          exp: (profile.experience || []).length,
+        })).toString('base64').slice(0, 32)
+      : 'generic';
 
+    const baseKey = cacheService.generateCareerAdviceKey(question);
+    const cacheKey = `${baseKey}:${profileFingerprint}`;
+
+    const cachedResponse = await cacheService.get(cacheKey);
     if (cachedResponse) {
       return res.json({
         success: true,
         answer: cachedResponse,
-        cached: true
+        cached: true,
+        personalized: !!profile,
       });
     }
 
-    // Get fresh response from Groq
-    const answer = await groqService.getCareerAdvice(question);
+    // Get fresh response from Groq with profile context
+    const answer = await groqService.getCareerAdvice(question, profile || null);
 
-    // Cache the response
-    await cacheService.set(cacheKey, answer);
+    // Cache personalized answers for less time (15 min) since profile can change
+    const ttl = profile ? 900 : undefined;
+    await cacheService.set(cacheKey, answer, ttl);
 
     res.json({
       success: true,
       answer,
-      cached: false
+      cached: false,
+      personalized: !!profile,
     });
 
   } catch (error) {

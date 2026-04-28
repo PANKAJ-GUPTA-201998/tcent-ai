@@ -27,14 +27,29 @@ export const getMyResume = async () => {
 };
 
 /**
+ * Fetch user profile from user-service
+ * Returns null (not throws) if profile doesn't exist yet
+ */
+export const getMyProfile = async () => {
+  try {
+    const response = await axios.get('/api/profile', getAuthHeader());
+    return response.data.profile || null;
+  } catch (error) {
+    if (error.response?.status === 404) return null;
+    return null; // silently ignore — profile is optional for analysis
+  }
+};
+
+/**
  * Analyze resume text for career intelligence
  * @param {string} resumeText
+ * @param {object|null} profile - optional user profile for personalization
  */
-export const analyzeCareer = async (resumeText) => {
+export const analyzeCareer = async (resumeText, profile = null) => {
   try {
     const response = await axios.post(
       `${AI_SERVICE_URL}/analyze`,
-      { resumeText },
+      { resumeText, profile },
       getAuthHeader()
     );
     return response.data;

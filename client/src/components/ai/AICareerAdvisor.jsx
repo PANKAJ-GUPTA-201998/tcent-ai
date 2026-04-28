@@ -8,6 +8,7 @@ import ChatBox from './ChatBox';
 import QuickQuestions from './QuickQuestions';
 import Button from '../ui/Button';
 import { getCareerAdvice } from '../../services/aiService';
+import { getMyProfile } from '../../services/careerService';
 
 const AICareerAdvisor = () => {
   const [messages, setMessages] = useState([]);
@@ -15,10 +16,14 @@ const AICareerAdvisor = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [remainingQuestions, setRemainingQuestions] = useState(10);
+  const [profile, setProfile] = useState(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('chatMessages');
     if (saved) setMessages(JSON.parse(saved));
+
+    // Fetch user profile silently for personalization
+    getMyProfile().then(p => setProfile(p)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -36,7 +41,7 @@ const AICareerAdvisor = () => {
     setIsLoading(true);
 
     try {
-      const response = await getCareerAdvice(question);
+      const response = await getCareerAdvice(question, profile);
       setMessages(prev => [...prev, {
         text: response.answer,
         isUser: false,
@@ -86,6 +91,13 @@ const AICareerAdvisor = () => {
             <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">
               Personalised career guidance powered by AI
             </p>
+            {profile && (
+              <span className="inline-flex items-center gap-1.5 mt-1.5 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 text-xs font-medium px-2.5 py-1 rounded-full">
+                ✨ Personalized
+                {profile.skills?.length > 0 && ` · ${profile.skills.length} skills`}
+                {profile.careerGoals && ' · goals set'}
+              </span>
+            )}
           </div>
           <div className="text-right shrink-0">
             <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Today's questions</p>
@@ -108,11 +120,14 @@ const AICareerAdvisor = () => {
               Welcome to AI Career Advisor
             </h2>
             <p className="text-gray-500 dark:text-slate-400 text-sm mb-6 max-w-md">
-              Ask anything about career transitions, skills, salary negotiation, or job search tips.
+              {profile?.careerGoals
+                ? `I'll help you with: "${profile.careerGoals.slice(0, 80)}${profile.careerGoals.length > 80 ? '…' : ''}"`
+                : 'Ask anything about career transitions, skills, salary negotiation, or job search tips.'}
             </p>
             <QuickQuestions
               onQuestionClick={handleSendMessage}
               disabled={isLoading || remainingQuestions === 0}
+              profile={profile}
             />
           </div>
         ) : (
